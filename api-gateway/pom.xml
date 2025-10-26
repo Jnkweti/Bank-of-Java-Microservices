@@ -92,6 +92,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>proto-config</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

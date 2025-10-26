@@ -2,12 +2,14 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="auth-service" />
         <module name="payment-service" />
+        <module name="proto-config" />
         <module name="customer-service" />
         <module name="analytics-service" />
         <module name="api-gateway" />
@@ -30,6 +32,7 @@
       <module name="customer-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="payment-service" options="-parameters" />
+      <module name="proto-config" options="" />
       <module name="test" options="-parameters" />
     </option>
   </component>

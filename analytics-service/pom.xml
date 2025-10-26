@@ -46,6 +46,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.pm</groupId>
+            <artifactId>proto-config</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
         <!-- Data Persistence -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

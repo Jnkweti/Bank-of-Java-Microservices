@@ -1,0 +1,31 @@
+###
+POST http://localhost:3001/Profile
+Content-Type: application/json
+
+{
+  "firstName": "joshua",
+  "lastName": "money",
+  "email": "Allnyong@money.com",
+  "address": "123 nunya lane",
+  "birthDate": "2002-11-23"
+}
+###
+
+GET http://localhost:3001/Profile/db812a15-c098-409c-96e0-079f721c96e5
+###
+
+PUT http://localhost:3001/Profile/40095dea-4617-4bbd-8bbe-30cf75592aa6
+Content-Type: application/json
+
+{
+  "firstName": "joshua",
+  "lastName": "money",
+  "email": "Allnyong@NKWETI.com",
+  "address": "123 nunya lane",
+  "birthDate": "2002-11-23"
+}
+###
+DELETE localhost:3001/Profile/40095dea-4617-4bbd-8bbe-30cf75592aa6
+
+
+
