@@ -27,5 +27,8 @@ Content-Type: application/json
 ###
 DELETE localhost:3001/Profile/40095dea-4617-4bbd-8bbe-30cf75592aa6
 
+###
+GET localhost:3001/Profile
+
 
 

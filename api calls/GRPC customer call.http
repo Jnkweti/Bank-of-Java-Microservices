@@ -1,0 +1,20 @@
+### GET request to example server
+GRPC localhost:9090/com.pm.proto.CustomerService/CreateCustomer
+Content-Type: application/json
+
+{
+  "firstName": "Jamal",
+  "lastName": "",
+  "email": "jamal@camat12.com",
+  "address": "821 s avalon lane",
+  "birthDate": "1999-12-23"
+}
+
+###
+
+GRPC localhost:9090/com.pm.proto.CustomerService/DeleteCustomer
+Content-Type: application/json
+
+{
+  "id": "fec50792-d58e-4d7f-9675-81e929407e3a"
+}

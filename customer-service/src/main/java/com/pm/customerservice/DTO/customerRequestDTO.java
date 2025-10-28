@@ -29,4 +29,5 @@ public class customerRequestDTO {
 
     private LocalDate registerDate;
 
+
 }

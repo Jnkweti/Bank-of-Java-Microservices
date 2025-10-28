@@ -4,12 +4,14 @@ import com.pm.customerservice.DTO.customerRequestDTO;
 import com.pm.customerservice.DTO.customerResponseDTO;
 import com.pm.customerservice.Service.CustomerService;
 import com.pm.customerservice.mapper.Mapper;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,16 +20,21 @@ import java.util.UUID;
 public class CustomerController {
     private final CustomerService customerService;
 
+    @GetMapping
+    public ResponseEntity<List<customerResponseDTO>> getAllCustomers(){
+        return ResponseEntity.ok(customerService.getAllCustomers());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<customerResponseDTO> getProfile(@PathVariable UUID id){
         return ResponseEntity.ok().body(customerService.getCustomerById(id));
     }
     @PostMapping
-    public ResponseEntity<customerResponseDTO> createProfile( @RequestBody customerRequestDTO customer){
+    public ResponseEntity<customerResponseDTO> createProfile(  @Valid @RequestBody customerRequestDTO customer){
         return ResponseEntity.ok().body(customerService.createCustomer(customer));
     }
     @PutMapping("/{id}")
-    public ResponseEntity<customerResponseDTO> updateProfile(@PathVariable UUID id, @RequestBody customerRequestDTO customer){
+    public ResponseEntity<customerResponseDTO> updateProfile(@Valid @PathVariable UUID id, @RequestBody customerRequestDTO customer){
         return ResponseEntity.ok().body(customerService.updateCustomer(id, customer));
     }
     @DeleteMapping("/{id}")

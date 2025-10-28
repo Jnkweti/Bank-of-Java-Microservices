@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service
 public class CustomerService {
     @Autowired
-    private customerRepo repository;
+    private  customerRepo repository;
 
     public List<customerResponseDTO> getAllCustomers(){
         List<customer> list =  repository.findAll();

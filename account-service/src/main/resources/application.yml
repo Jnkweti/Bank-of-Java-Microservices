@@ -1,11 +1,10 @@
 spring:
   application:
-    name: customer-service
-
+    name: account-service
   datasource:
-#    url: jdbc:postgresql://customer_db:5432/customerdb Use in docker container
-#    use below when local
-    url: jdbc:postgresql://localhost:5000/customerdb
+    #    url: jdbc:postgresql://customer_db:5432/customerdb Use in docker container
+    #    use below when local
+    url: jdbc:postgresql://localhost:5001/accountdb
     username: admin
     password: root
     driver-class-name: org.postgresql.Driver
@@ -19,15 +18,10 @@ spring:
     show-sql: true
 
 server:
-  port: 3001
+  port: 3002
 
 logging:
   level:
     root: info
-
-grpc:
-  server:
-    port: 9090
-
 
 
