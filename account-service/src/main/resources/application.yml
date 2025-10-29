@@ -24,4 +24,8 @@ logging:
   level:
     root: info
 
+grpc:
+  server:
+    port: 9091
+
 

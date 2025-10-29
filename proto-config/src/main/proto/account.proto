@@ -1,0 +1,81 @@
+syntax="proto3";
+
+package com.pm.proto;
+
+option java_multiple_files = true;
+option java_package = "com.pm.proto";
+option java_outer_classname = "accountProto";
+
+
+enum AccStatus{
+  ACTIVE = 0;
+  FROZEN = 1;
+  CLOSED =2;
+  PENDING =3;
+}
+enum AccType{
+  SAVINGS = 0;
+  CHECKING =1;
+  CREDIT = 2;
+  LOAN = 3;
+}
+message Account {
+  string id = 1;
+  string customerId = 2;
+  string accName = 3;
+  AccType type = 4;
+  AccStatus status = 5;
+  string balance = 6;
+}
+//Get account by account id params
+message GetAccIdRequest{
+  string customerId = 1;
+}
+message GetAccIDResponse{
+  Account account = 1;
+}
+
+// get accounts by customer id
+message GetAccByCusIdRequest{
+  string cusId = 1;
+}
+message GetAccByCusIdResponse{
+  Account account =1;
+}
+
+//create account params
+message CreateAccRequest{
+    string accName = 1;
+    string customerId = 2;
+    AccType type  = 3;
+    AccStatus status = 4;
+    string balance =5;
+}
+message CreateAccResponse{
+  Account account = 1;
+  string created = 2;
+}
+//Delete account params
+message DeleteAccByIdRequest{
+  string accId = 1;
+}
+message DeleteAccByIdResponse{
+  string status = 1;
+}
+//update account params
+message UpdateAccRequest{
+  string accName =1;
+  AccType type = 2;
+  AccStatus stat =3;
+  string balance = 4;
+}
+message UpdateAccResponse{
+  Account account = 1;
+}
+service AccountServ{
+  rpc GetAccByCusId(GetAccIdRequest) returns (GetAccIDResponse);
+  rpc GetAccById(GetAccIdRequest) returns (GetAccIDResponse);
+  rpc CreateAcc(CreateAccRequest) returns (CreateAccResponse);
+  rpc DeleteAccIdRequest(DeleteAccByIdRequest) returns (DeleteAccByIdResponse);
+  rpc UpdateAcc(UpdateAccRequest) returns (UpdateAccResponse);
+}

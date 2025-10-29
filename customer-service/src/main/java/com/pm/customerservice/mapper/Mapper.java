@@ -7,6 +7,7 @@ import com.pm.customerservice.model.customer;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class Mapper {
 
@@ -26,7 +27,12 @@ public class Mapper {
         entity.setLastName(dto.getLastName());
         entity.setEmail(dto.getEmail());
         entity.setAddress(dto.getAddress());
-        entity.setBirthDate(LocalDate.parse(dto.getBirthDate()));
+        try{
+            entity.setBirthDate(LocalDate.parse(dto.getBirthDate()));
+        }
+        catch(DateTimeParseException e){
+            throw new IllegalArgumentException("Birth date must be in format YYYY-MM-DD");
+        }
         entity.setRegisterDate(LocalDate.now());
         return entity;
 

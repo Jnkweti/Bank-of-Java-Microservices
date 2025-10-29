@@ -1,4 +1,4 @@
-package com.pm.customerservice.Validation;
+package com.pm.customerservice.Exceptions.Validation;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -10,12 +10,11 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 @Component
-public abstract class GrcpValidation {
-
+public abstract class GrpcValidation {
     @Autowired
     protected Validator validator;
 
-    protected <T> void validate(T dto, StreamObserver<?> responseObserver) {
+    public <T> void validate(T dto, StreamObserver<?> responseObserver) {
         Set<ConstraintViolation<T>> violations = validator.validate(dto);
         if (!violations.isEmpty()) {
             String message = violations.iterator().next().getMessage();
@@ -31,7 +30,7 @@ public abstract class GrcpValidation {
     /**
      * Helper to handle unexpected errors in a consistent way.
      */
-    protected void handleException(Exception e, StreamObserver<?> responseObserver) {
+    public void handleException(Exception e, StreamObserver<?> responseObserver) {
         responseObserver.onError(
                 Status.INTERNAL
                         .withDescription("Unexpected error: " + e.getMessage())
