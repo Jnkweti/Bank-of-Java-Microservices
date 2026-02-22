@@ -2,6 +2,7 @@ package com.pm.customerservice.grpc;
 
 import com.pm.customerservice.DTO.customerRequestDTO;
 import com.pm.customerservice.DTO.customerResponseDTO;
+import com.pm.customerservice.Exceptions.Validation.GrpcValidation;
 import com.pm.customerservice.Service.CustomerService;
 import com.pm.proto.*;
 import com.pm.proto.CustomerServiceGrpc.CustomerServiceImplBase;
@@ -22,8 +23,8 @@ public class customerGrpcService extends CustomerServiceImplBase{
 
     @Autowired
     private CustomerService custService;
-//    @Autowired
-//    GrpcValidation grpcValidation;
+    @Autowired
+    GrpcValidation grpcValidation;
 
     private static final Logger log = LoggerFactory.getLogger(customerGrpcService.class);
 
@@ -33,8 +34,8 @@ public class customerGrpcService extends CustomerServiceImplBase{
         try {
             log.info("createProfile Request received {}", customerRequest.toString());
 
-            // use base class validation checks fields passed
-//            grpcValidation.validate(customerRequest, responseObserver);
+//          use base class validation checks fields passed
+            grpcValidation.validate(customerRequest, responseObserver);
 
             // map gRPC → DTO
             customerRequestDTO dto = new customerRequestDTO();
@@ -45,7 +46,7 @@ public class customerGrpcService extends CustomerServiceImplBase{
             dto.setBirthDate(customerRequest.getBirthDate());
 
             // use base class validation checks fields passed
-            //grpcValidation.validate(dto, responseObserver);
+            grpcValidation.validate(dto, responseObserver);
 
             custService.createCustomer(dto);
 
