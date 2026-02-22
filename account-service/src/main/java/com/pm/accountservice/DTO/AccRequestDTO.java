@@ -2,9 +2,8 @@ package com.pm.accountservice.DTO;
 
 import com.pm.accountservice.Enum.AccountStatus;
 import com.pm.accountservice.Enum.AccountType;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -15,12 +14,10 @@ public class AccRequestDTO {
     @Size(max = 100, message="account name cannot exceed 100 characters")
     private String accountName;
 
-    @Enumerated(EnumType.STRING)
-    @NotBlank
+    @NotNull
     private AccountStatus status;
 
-    @Enumerated(EnumType.STRING)
-    @NotBlank
+    @NotNull
     private AccountType type;
 
     @NotBlank

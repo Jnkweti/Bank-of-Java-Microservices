@@ -2,17 +2,13 @@ package com.pm.accountservice.model;
 
 import com.pm.accountservice.Enum.AccountStatus;
 import com.pm.accountservice.Enum.AccountType;
-import com.pm.accountservice.Repository.accountRepo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Random;
 import java.util.UUID;
 
 @Entity
@@ -20,7 +16,7 @@ import java.util.UUID;
 public class account {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @NotNull
@@ -32,7 +28,7 @@ public class account {
     private UUID customerId;
 
     @NotNull
-    @Column(nullable = false, precision = 15, scale = 2, unique = true)
+    @Column(nullable = false, unique = true)
     private String accountNumber;
 
     @NotNull
@@ -60,30 +56,8 @@ public class account {
     // Timestamp for last transaction or update
     private LocalDateTime lastUpdated;
 
-
-    //used to generate account number
     @PrePersist
     public void onCreate() {
-        if (accountNumber == null) {
-            // Generate a 10-digit sequential number starting from 1000000000
-            accountNumber = generateNextAccountNumber();
-        }
+        openedDate = LocalDateTime.now();
     }
-
-    private static accountRepo accountRepository;
-    private static final Random RANDOM = new Random();
-
-    private String generateNextAccountNumber() {
-        String accNum;
-        do {
-            StringBuilder sb = new StringBuilder("BOJ-");
-            for (int i = 0; i < 10; i++) {
-                sb.append(RANDOM.nextInt(10));
-            }
-            accNum = sb.toString();
-        } while (accountRepository.existsByAccountNumber(accNum)); // DB uniqueness check
-        return accNum;
-    }
-
-
 }

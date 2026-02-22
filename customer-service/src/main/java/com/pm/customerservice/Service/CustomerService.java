@@ -8,6 +8,7 @@ import com.pm.customerservice.Exceptions.CustomerNotFoundException;
 import com.pm.customerservice.Exceptions.EmailAlreadyExistException;
 import com.pm.customerservice.Exceptions.EmailDoesNotExist;
 import com.pm.customerservice.Repo.customerRepo;
+import com.pm.customerservice.grpc.AccountServiceGrpcClient;
 import com.pm.customerservice.mapper.Mapper;
 import com.pm.customerservice.model.customer;
 import jakarta.validation.Valid;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class CustomerService {
     @Autowired
     private  customerRepo repository;
+    private AccountServiceGrpcClient AccGrpcClient;
 
     public List<customerResponseDTO> getAllCustomers(){
         List<customer> list =  repository.findAll();
@@ -75,4 +77,5 @@ public class CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException("profile Id not found: " + id));
         repository.deleteById(id);
     }
+
 }

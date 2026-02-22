@@ -2,17 +2,15 @@ package com.pm.accountservice.Service;
 
 import com.pm.accountservice.DTO.AccRequestDTO;
 import com.pm.accountservice.DTO.AccResponseDTO;
+import com.pm.accountservice.Exception.AccountNumberAlreadyExistException;
 import com.pm.accountservice.Mapper.MapAcc;
 import com.pm.accountservice.Repository.accountRepo;
 import com.pm.accountservice.model.account;
 import lombok.AllArgsConstructor;
-import org.apache.catalina.mapper.Mapper;
 import org.springframework.stereotype.Service;
 
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -36,14 +34,12 @@ public class accountService {
 //    }
     public AccResponseDTO createAccount(AccRequestDTO accRequestDTO) {
         account acc = MapAcc.toEntity(accRequestDTO);
-        acc.
-    //must check to ensure customer id exist!!
-
+        String accNum = "BOJ-" + String.format("%010d", new Random().nextInt(1_000_000_000));
+        if(repository.existsByAccountNumber(accNum)) throw new AccountNumberAlreadyExistException("Account Number already exists!");
+        acc.setAccountNumber(accNum);
         repository.save(acc);
 
+        return  MapAcc.toDTO(acc);
 
-        //Placeholder
-        AccResponseDTO accResponseDTO = new AccResponseDTO();
-        return accResponseDTO;
     }
 }
