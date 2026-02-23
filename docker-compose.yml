@@ -1,0 +1,166 @@
+version: "3.9"
+
+# ─── Local Development Stack ────────────────────────────────────────────────
+# Each service gets its own PostgreSQL container matching the port in its
+# application.yml. No app config changes required.
+#
+# Start everything:   docker-compose up -d
+# Stop everything:    docker-compose down
+# Wipe data:          docker-compose down -v
+#
+# Individual DB only: docker-compose up -d customerdb accountdb paymentdb
+# ────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Databases ──────────────────────────────────────────────────────────────
+
+  customerdb:
+    image: postgres:16-alpine
+    container_name: customerdb
+    environment:
+      POSTGRES_DB: customerdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5000:5432"
+    volumes:
+      - customerdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d customerdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  accountdb:
+    image: postgres:16-alpine
+    container_name: accountdb
+    environment:
+      POSTGRES_DB: accountdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5001:5432"
+    volumes:
+      - accountdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d accountdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  paymentdb:
+    image: postgres:16-alpine
+    container_name: paymentdb
+    environment:
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5002:5432"
+    volumes:
+      - paymentdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d paymentdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notificationdb:
+    image: postgres:16-alpine
+    container_name: notificationdb
+    environment:
+      POSTGRES_DB: notificationdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5003:5432"
+    volumes:
+      - notificationdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d notificationdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  analyticsdb:
+    image: postgres:16-alpine
+    container_name: analyticsdb
+    environment:
+      POSTGRES_DB: analyticsdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5004:5432"
+    volumes:
+      - analyticsdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d analyticsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authdb:
+    image: postgres:16-alpine
+    container_name: authdb
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5005:5432"
+    volumes:
+      - authdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d authdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Kafka (KRaft mode — no Zookeeper) ──────────────────────────────────────
+  # KRaft is Kafka's built-in consensus protocol (Kafka 3.3+).
+  # Removes the Zookeeper dependency, simpler to run locally.
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    ports:
+      - "9094:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ── Zipkin (Distributed Tracing UI) ────────────────────────────────────────
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
+# ── Named Volumes ─────────────────────────────────────────────────────────────
+volumes:
+  customerdb_data:
+  accountdb_data:
+  paymentdb_data:
+  notificationdb_data:
+  analyticsdb_data:
+  authdb_data:
+  kafka_data:

@@ -18,7 +18,7 @@
 |---|---|---|---|
 | customer-service | 3001 | 9090 | COMPLETE |
 | account-service | 3002 | 9091 | COMPLETE |
-| payment-service | 3003 | 9092 | gRPC server done — Kafka + tests remaining |
+| payment-service | 3003 | 9092 | COMPLETE |
 | notification-service | 3004 | — | Bootstrapped only |
 | analytics-service | 3005 | — | Bootstrapped only |
 | auth-service | 3006 | — | Bootstrapped only |
@@ -71,8 +71,8 @@ After a payment completes (or fails), publish an event to Kafka so downstream se
 **Requirement:** Kafka publishing is fire-and-forget from the payment perspective. Do not make the payment outcome dependent on Kafka availability.
 
 ### 1.3 Unit Tests
-- [ ] `PaymentMapperTest.java` — `toEntity()` happy path, `toDTO()` happy path
-- [ ] `PaymentServiceTest.java` — mock `paymentRepo`, `AccountServiceGrpcClient`, `PaymentEventProducer`:
+- [x] `PaymentMapperTest.java` — `toEntity()` happy path, `toDTO()` happy path
+- [x] `PaymentServiceTest.java` — mock `paymentRepo`, `AccountServiceGrpcClient`, `PaymentEventProducer`:
   - `getAllPayments_shouldReturnList`
   - `getPayment_shouldReturnDTO_whenFound`
   - `getPayment_shouldThrow_whenNotFound`
@@ -85,7 +85,7 @@ After a payment completes (or fails), publish an event to Kafka so downstream se
   - `processPayment_shouldReverseDebit_whenCreditFails`
   - `processPayment_shouldPublishEvent_afterCompletion`
   - `processPayment_shouldPublishFailedEvent_afterFailure`
-- [ ] `PaymentControllerTest.java` — `@WebMvcTest` + `MockMvc`:
+- [x] `PaymentControllerTest.java` — `@WebMvcTest` + `MockMvc`:
   - `GET /api/payments` → 200 list
   - `GET /api/payments/{id}` → 200 single
   - `GET /api/payments/{id}` → 404 when not found
