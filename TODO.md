@@ -20,7 +20,7 @@
 | account-service | 3002 | 9091 | COMPLETE |
 | payment-service | 3003 | 9092 | COMPLETE |
 | notification-service | 3004 | — | COMPLETE |
-| analytics-service | 3005 | — | Bootstrapped only |
+| analytics-service | 3005 | — | COMPLETE |
 | auth-service | 3006 | — | Bootstrapped only |
 | api-gateway | 8080 | — | Bootstrapped only |
 
@@ -151,31 +151,39 @@ After a payment completes (or fails), publish an event to Kafka so downstream se
 > Goal: analytics-service consumes all events and exposes aggregated metrics.
 
 ### 3.1 Domain Model
-- [ ] Create `PaymentEvent.java` entity — persists the raw event for aggregation:
-  - Fields: `id` (UUID), `paymentId` (String), `fromAccountId`, `toAccountId`, `amount` (BigDecimal), `status`, `type`, `occurredAt` (LocalDateTime)
-- [ ] Create `paymentEventRepo.java`:
-  - Custom queries: `countByStatus()`, `sumAmountByDateRange()`, `findTopSpendingAccounts()`
+- [x] Create `PaymentEventRecord.java` — MongoDB `@Document(collection = "payment_events")`:
+  - Fields: `id` (String), `paymentId` (String, `@Indexed(unique = true)`), `fromAccountId`, `toAccountId`, `amount` (BigDecimal/Decimal128), `status`, `type`, `occurredAt`, `recordedAt` (LocalDateTime)
+- [x] Create `paymentEventRepo.java` extending `MongoRepository<PaymentEventRecord, String>`:
+  - Spring Data derives `existsByPaymentId()` and `countByStatus()` from method names
+  - Complex aggregations (sum, daily group-by, top-N) done via `MongoTemplate` in service layer
 
 ### 3.2 Kafka Consumer
-- [ ] Create `PaymentEventConsumer.java` — same pattern as notification-service consumer
-- [ ] Persist each event to the analytics DB without calling any other service
-- [ ] Configure `application.yml` with `group-id: analytics-group` (different from notification-group, both receive all events)
+- [x] Create `PaymentEventConsumer.java` — same pattern as notification-service consumer
+- [x] Persist each event to MongoDB without calling any other service (idempotent via `existsByPaymentId`)
+- [x] Configure `application.yml` with `group-id: analytics-group`, MongoDB URI, `spring.json.use.type.headers: false`
 
 ### 3.3 Analytics API
-- [ ] Create `AnalyticsService.java`:
-  - `getSummary()` — total payments, total volume, success rate, failure rate
-  - `getDailyVolume(LocalDate from, LocalDate to)` — sum of amounts grouped by day
-  - `getTopAccounts(int limit)` — accounts with highest payment volume
-- [ ] Create `AnalyticsController.java`:
+- [x] Create `AnalyticsService.java` — uses `MongoTemplate` aggregation pipeline for:
+  - `getSummary()` — total payments, total volume (`$sum`), success rate
+  - `getDailyVolume(from, to)` — `$match → $project dateToString → $group → $sort`
+  - `getTopAccounts(limit)` — `$group by fromAccountId → $sort desc → $limit N`
+- [x] Create `AnalyticsController.java`:
   - `GET /api/analytics/summary`
   - `GET /api/analytics/volume?from=YYYY-MM-DD&to=YYYY-MM-DD`
   - `GET /api/analytics/top-accounts?limit=10`
-- [ ] Create `AnalyticsSummaryDTO.java`, `DailyVolumeDTO.java`
+- [x] Create `AnalyticsSummaryDTO.java`, `DailyVolumeDTO.java`, `TopAccountDTO.java`
 
-### 3.4 Observability
+### 3.4 Unit Tests (14/14 passing)
+- [x] `AnalyticsServiceTest.java` — mocks `paymentEventRepo` + `MongoTemplate`; covers idempotency, empty collection, date range validation, top-accounts
+- [x] `AnalyticsControllerTest.java` — `@WebMvcTest`; covers all three endpoints + 400 on bad date range
+- [x] `PaymentEventConsumerTest.java` — verifies consumer delegates to service
+
+### 3.5 Infrastructure
+- [x] `analyticsdb` Docker container: `mongo:7` on port `27017:27017` in `docker-compose.yml`
+
+### 3.6 Observability (deferred to Milestone 8)
 - [ ] Expose Micrometer metrics via `/actuator/prometheus`
 - [ ] Add custom counter: `payments.processed.count` tagged by `status`
-- [ ] Add custom timer: `payment.processing.duration`
 
 ---
 
@@ -529,18 +537,39 @@ Trigger: push to `main` (after CI passes)
 ## Final Production Checklist
 Before calling this production-ready:
 
+**Code Hygiene**
+- [ ] Disable or remove REST controllers in all internal microservices — in production
+      these are never called (API Gateway routes exclusively via gRPC). Services affected:
+      - [ ] customer-service — disable `CustomerController.java`
+      - [ ] account-service  — disable `AccountController.java`
+      - [ ] payment-service  — disable `PaymentController.java`
+      - [ ] notification-service — disable `NotificationController.java`
+      - [ ] analytics-service   — disable `AnalyticsController.java`
+      Approach: annotate each controller with `@Profile("!prod")` so it loads in
+      dev/test but is excluded when `SPRING_PROFILES_ACTIVE=prod` is set in ECS.
+      Do NOT delete them — they are needed for local development and debugging.
+
+**Database**
 - [ ] All `ddl-auto: update` replaced with Flyway migrations
 - [ ] All hardcoded passwords/hosts removed from `application.yml`
+
+**Testing**
 - [ ] All services have unit tests passing with `mvn clean verify`
+
+**Observability**
 - [ ] All services have a `/actuator/health` endpoint returning 200
 - [ ] Structured JSON logging in production profile
+- [ ] No PII in logs
+
+**Security**
 - [ ] gRPC TLS enabled in production
 - [ ] JWT auth enforced on all non-public API Gateway routes
-- [ ] No PII in logs
+- [ ] All secrets in Secrets Manager, not in code or env files committed to git
+
+**Infrastructure**
 - [ ] GitHub Actions CI/CD pipeline running on every push to `main`
 - [ ] Docker Compose brings full stack up locally with `docker-compose up`
 - [ ] AWS infrastructure is defined as code (CloudFormation or Terraform) — not click-ops
 - [ ] RDS automated backups enabled
 - [ ] MSK Serverless topic retention configured
 - [ ] ECS auto-scaling configured
-- [ ] All secrets in Secrets Manager, not in code or env files committed to git

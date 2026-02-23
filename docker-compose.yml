@@ -84,18 +84,14 @@ services:
       retries: 5
 
   analyticsdb:
-    image: postgres:16-alpine
+    image: mongo:7
     container_name: analyticsdb
-    environment:
-      POSTGRES_DB: analyticsdb
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: root
     ports:
-      - "5004:5432"
+      - "27017:27017"
     volumes:
-      - analyticsdb_data:/var/lib/postgresql/data
+      - analyticsdb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d analyticsdb"]
+      test: ["CMD-SHELL", "mongosh --eval \"db.adminCommand('ping')\" --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
