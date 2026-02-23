@@ -38,11 +38,13 @@ public class MapAcc {
         AccResponseDTO Acc = new AccResponseDTO();
         Acc.setAccountId(acc.getId().toString());
         Acc.setAccountName(acc.getAccountName());
-        Acc.setAccountName(acc.getAccountName());
+        Acc.setAccountNumber(acc.getAccountNumber());
+        Acc.setAccountBalance(acc.getBalance().toString());
+        Acc.setCustomerId(acc.getCustomerId().toString());
         Acc.setAccountType(String.valueOf(acc.getAccountType()));
         Acc.setAccountStatus(String.valueOf(acc.getStatus()));
         Acc.setInterestRate(acc.getInterestRate().toString());
-        Acc.setLastUpdate(LocalDateTime.now().toString());
+        Acc.setLastUpdate(acc.getLastUpdated().toString());
         return Acc;
     }
 
