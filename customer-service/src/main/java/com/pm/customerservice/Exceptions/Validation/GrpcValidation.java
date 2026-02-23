@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 @Component
-public abstract class GrpcValidation {
+public class GrpcValidation {
     @Autowired
     protected Validator validator;
 

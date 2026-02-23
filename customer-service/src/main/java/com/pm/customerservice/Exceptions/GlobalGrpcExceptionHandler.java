@@ -22,5 +22,10 @@ public class GlobalGrpcExceptionHandler {
     public Status handleCustomerNotFound(CustomerNotFoundException e) {
         return Status.NOT_FOUND.withDescription(e.getMessage());
     }
+
+    @GrpcExceptionHandler(EmailDoesNotExist.class)
+    public Status handleEmailDoesNotExist(EmailDoesNotExist e) {
+        return Status.NOT_FOUND.withDescription(e.getMessage());
+    }
 }
 
