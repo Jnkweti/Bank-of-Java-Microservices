@@ -1,8 +1,10 @@
 package com.pm.paymentservice.Service;
 
+import com.pm.paymentservice.DTO.PaymentEventDTO;
 import com.pm.paymentservice.DTO.PaymentRequestDTO;
 import com.pm.paymentservice.DTO.PaymentResponseDTO;
 import com.pm.paymentservice.Enum.PaymentStatus;
+import com.pm.paymentservice.Kafka.PaymentEventProducer;
 import com.pm.paymentservice.Exception.AccountNotActiveException;
 import com.pm.paymentservice.Exception.InsufficientFundsException;
 import com.pm.paymentservice.Exception.PaymentNotFoundException;
@@ -29,6 +31,7 @@ public class PaymentService {
 
     private final paymentRepo repository;
     private final AccountServiceGrpcClient accountServiceGrpcClient;
+    private final PaymentEventProducer eventProducer;
 
     public List<PaymentResponseDTO> getAllPayments() {
         return repository.findAll().stream()
@@ -112,14 +115,30 @@ public class PaymentService {
 
             p.setStatus(PaymentStatus.FAILED);
             repository.save(p);
+            eventProducer.publishPaymentEvent(buildEvent(p));
             return PaymentMapper.toDTO(p);
         }
 
-        // --- Step 6: Mark payment as COMPLETED ---
         p.setStatus(PaymentStatus.COMPLETED);
         repository.save(p);
         log.info("Payment {} completed successfully", p.getId());
+        eventProducer.publishPaymentEvent(buildEvent(p));
 
         return PaymentMapper.toDTO(p);
+    }
+
+    // Maps a saved payment entity to the Kafka event payload.
+    // Called only after the entity has been saved with its final status,
+    // so updatedAt is guaranteed to be set by @PreUpdate.
+    private PaymentEventDTO buildEvent(payment p) {
+        return new PaymentEventDTO(
+                p.getId().toString(),
+                p.getFromAccountId(),
+                p.getToAccountId(),
+                p.getAmount().toPlainString(),
+                p.getStatus().name(),
+                p.getType().name(),
+                p.getUpdatedAt().toString()
+        );
     }
 }

@@ -55,15 +55,15 @@ The pattern across all services: API Gateway accepts REST → translates to gRPC
 ### 1.2 Kafka Event Publishing
 After a payment completes (or fails), publish an event to Kafka so downstream services can react asynchronously. This decouples notification and analytics from the payment flow.
 
-- [ ] Create `PaymentEventDTO.java` in `DTO/` package:
+- [x] Create `PaymentEventDTO.java` in `DTO/` package:
   - Fields: `paymentId` (String), `fromAccountId`, `toAccountId`, `amount`, `status` (String), `type` (String), `occurredAt` (String ISO-8601)
   - This is the event contract — downstream consumers will deserialize this
-- [ ] Create `PaymentEventProducer.java` in `Kafka/` package:
+- [x] Create `PaymentEventProducer.java` in `Kafka/` package:
   - Inject `KafkaTemplate<String, PaymentEventDTO>`
   - Method: `publishPaymentEvent(PaymentEventDTO event)` — sends to topic from `@Value("${kafka.topic.payment-processed}")`
   - Use the `paymentId` as the Kafka message key (ensures ordering per payment)
   - Log on success and failure
-- [ ] Wire `PaymentEventProducer` into `PaymentService.processPayment()`:
+- [x] Wire `PaymentEventProducer` into `PaymentService.processPayment()`:
   - Publish after `status = COMPLETED` and after `status = FAILED` (both outcomes are events)
   - Wrap in try/catch — a Kafka failure must NOT roll back the payment. Log the error instead.
     The payment already succeeded; losing the event is preferable to undoing the transaction.
