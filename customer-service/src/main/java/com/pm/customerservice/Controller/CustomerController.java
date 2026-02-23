@@ -30,7 +30,7 @@ public class CustomerController {
         return ResponseEntity.ok().body(customerService.getCustomerById(id));
     }
     @PostMapping
-    public ResponseEntity<customerResponseDTO> createProfile(  @Valid @RequestBody customerRequestDTO customer){
+    public ResponseEntity<customerResponseDTO> createProfile( @Valid @RequestBody customerRequestDTO customer){
         return ResponseEntity.ok().body(customerService.createCustomer(customer));
     }
     @PutMapping("/{id}")

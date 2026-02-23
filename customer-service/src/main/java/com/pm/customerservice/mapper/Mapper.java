@@ -13,6 +13,7 @@ public class Mapper {
 
     public static customerResponseDTO toDTO(customer customer){
         customerResponseDTO dto = new customerResponseDTO();
+        dto.setId(String.valueOf(customer.getId()));
         dto.setFirstName(customer.getFirstName());
         dto.setLastName(customer.getLastName());
         dto.setEmail(customer.getEmail());
