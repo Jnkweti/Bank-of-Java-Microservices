@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5003/notificationdb
+    username: admin
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # Tells the JsonDeserializer which packages it is allowed to deserialize.
+        # Without this, Spring Kafka will refuse to deserialize any class as a security measure.
+        spring.json.trusted.packages: "com.pm.*"
+        # Maps the incoming type header to our local PaymentEventDTO class.
+        # payment-service sends the fully qualified class name in the message header.
+        # This override lets our local copy receive it regardless of package differences.
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.pm.notificationservice.DTO.PaymentEventDTO
+
+server:
+  port: 3004
+
+kafka:
+  topic:
+    payment-processed: payment-processed
+
+logging:
+  level:
+    root: info

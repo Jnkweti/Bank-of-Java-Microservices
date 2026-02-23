@@ -19,7 +19,7 @@
 | customer-service | 3001 | 9090 | COMPLETE |
 | account-service | 3002 | 9091 | COMPLETE |
 | payment-service | 3003 | 9092 | COMPLETE |
-| notification-service | 3004 | — | Bootstrapped only |
+| notification-service | 3004 | — | COMPLETE |
 | analytics-service | 3005 | — | Bootstrapped only |
 | auth-service | 3006 | — | Bootstrapped only |
 | api-gateway | 8080 | — | Bootstrapped only |
