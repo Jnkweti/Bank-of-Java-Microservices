@@ -25,6 +25,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCustomerNotFound(CustomerNotFoundException e) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Customer Not Found");
+        body.put("message", e.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(AccountNumberAlreadyExistException.class)
     public ResponseEntity<Map<String, Object>> handleAccountNumberAlreadyExists(AccountNumberAlreadyExistException e) {
         Map<String, Object> body = new HashMap<>();
