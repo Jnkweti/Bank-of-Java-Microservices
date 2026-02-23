@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: payment-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5002/paymentdb
+    username: admin
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+server:
+  port: 3003
+
+grpc:
+  server:
+    port: 9092
+
+# Address of account-service gRPC server
+proto:
+  account:
+    address: localhost
+    grpc:
+      port: 9091
+
+logging:
+  level:
+    root: info
