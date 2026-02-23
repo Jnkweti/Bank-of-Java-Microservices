@@ -29,7 +29,7 @@ message Account {
 }
 //Get account by account id params
 message GetAccIdRequest{
-  string customerId = 1;
+  string id = 1;
 }
 message GetAccIDResponse{
   Account account = 1;
@@ -64,10 +64,11 @@ message DeleteAccByIdResponse{
 }
 //update account params
 message UpdateAccRequest{
-  string accName =1;
-  AccType type = 2;
-  AccStatus stat =3;
-  string balance = 4;
+  string id = 1;
+  string accName = 2;
+  AccType type = 3;
+  AccStatus stat = 4;
+  string balance = 5;
 }
 message UpdateAccResponse{
   Account account = 1;
