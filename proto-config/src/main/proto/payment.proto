@@ -1,0 +1,71 @@
+syntax="proto3";
+
+package com.pm.proto;
+
+option java_multiple_files = true;
+option java_package = "com.pm.proto";
+option java_outer_classname = "PaymentProto";
+
+// Mirrors PaymentStatus enum in payment-service.
+// PENDING = 0 must be first - proto3 requires the default value to be 0.
+// Values are prefixed with PAY_ to avoid conflicts with AccStatus which
+// also defines PENDING in the same proto package namespace.
+enum PaymentStatus {
+  PAY_PENDING = 0;
+  PAY_COMPLETED = 1;
+  PAY_FAILED = 2;
+}
+
+enum PaymentType {
+  PAY_TRANSFER = 0;
+  PAY_DEPOSIT = 1;
+  PAY_WITHDRAWAL = 2;
+}
+
+// Core payment message returned in all responses.
+message Payment {
+  string id = 1;
+  string fromAccountId = 2;
+  string toAccountId = 3;
+  string amount = 4;
+  PaymentStatus status = 5;
+  PaymentType type = 6;
+  string description = 7;
+  string createdAt = 8;
+  string updatedAt = 9;
+}
+
+// Process a new payment
+message ProcessPaymentRequest {
+  string fromAccountId = 1;
+  string toAccountId = 2;
+  string amount = 3;
+  PaymentType type = 4;
+  string description = 5;
+}
+message ProcessPaymentResponse {
+  Payment payment = 1;
+}
+
+// Get a single payment by its ID
+message GetPaymentByIdRequest {
+  string id = 1;
+}
+message GetPaymentByIdResponse {
+  Payment payment = 1;
+}
+
+// Get all payments involving a specific account (sent or received).
+// repeated = proto's equivalent of List<Payment>
+message GetPaymentsByAccountRequest {
+  string accountId = 1;
+}
+message GetPaymentsByAccountResponse {
+  repeated Payment payments = 1;
+}
+
+service PaymentService {
+  rpc ProcessPayment(ProcessPaymentRequest) returns (ProcessPaymentResponse);
+  rpc GetPaymentById(GetPaymentByIdRequest) returns (GetPaymentByIdResponse);
+  rpc GetPaymentsByAccount(GetPaymentsByAccountRequest) returns (GetPaymentsByAccountResponse);
+}
