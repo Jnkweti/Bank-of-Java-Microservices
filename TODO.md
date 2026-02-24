@@ -21,7 +21,7 @@
 | payment-service | 3003 | 9092 | COMPLETE |
 | notification-service | 3004 | — | COMPLETE |
 | analytics-service | 3005 | — | COMPLETE |
-| auth-service | 3006 | — | Bootstrapped only |
+| auth-service | 3006 | — | COMPLETE |
 | api-gateway | 8080 | — | Bootstrapped only |
 
 ---

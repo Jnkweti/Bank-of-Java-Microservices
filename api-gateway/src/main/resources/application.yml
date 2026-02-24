@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # gateway fetches the public key from here at startup and caches it
+          # no DB, no shared secret — auth-service is the only one that can sign
+          jwk-set-uri: http://${AUTH_SERVICE_HOST:localhost}:3006/api/auth/.well-known/jwks.json
+
+server:
+  port: 8080
+
+# gRPC client addresses — plaintext since TLS is handled at the load balancer level
+grpc:
+  client:
+    customer-service:
+      address: static://${CUSTOMER_SERVICE_HOST:localhost}:9090
+      negotiation-type: plaintext
+    account-service:
+      address: static://${ACCOUNT_SERVICE_HOST:localhost}:9091
+      negotiation-type: plaintext
+    payment-service:
+      address: static://${PAYMENT_SERVICE_HOST:localhost}:9092
+      negotiation-type: plaintext
+
+# analytics-service is REST-only, so we forward via RestTemplate
+analytics:
+  service:
+    url: http://${ANALYTICS_SERVICE_HOST:localhost}:3005
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
