@@ -18,13 +18,33 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    // Triggered when login is attempted with an email that doesn't exist
+    // both of these map to 401 with the same generic message — don't leak which field was wrong
     @ExceptionHandler(EmailNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEmailNotFound(EmailNotFoundException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "timestamp", LocalDateTime.now().toString(),
                 "status", HttpStatus.UNAUTHORIZED.value(),
                 "error", "Unauthorized",
+                "message", e.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "status", HttpStatus.UNAUTHORIZED.value(),
+                "error", "Unauthorized",
+                "message", e.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailAlreadyExists(EmailAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "status", HttpStatus.CONFLICT.value(),
+                "error", "Conflict",
                 "message", e.getMessage()
         ));
     }
