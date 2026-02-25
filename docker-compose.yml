@@ -166,6 +166,7 @@ services:
       - DB_USER=admin
       - DB_PASSWORD=root
       - ACCOUNT_SERVICE_HOST=account-service
+      - ZIPKIN_HOST=zipkin
     depends_on:
       customerdb:
         condition: service_healthy
@@ -186,6 +187,7 @@ services:
       - DB_USER=admin
       - DB_PASSWORD=root
       - CUSTOMER_SERVICE_HOST=customer-service
+      - ZIPKIN_HOST=zipkin
     depends_on:
       accountdb:
         condition: service_healthy
@@ -205,6 +207,7 @@ services:
       - DB_PASSWORD=root
       - ACCOUNT_SERVICE_HOST=account-service
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - ZIPKIN_HOST=zipkin
     depends_on:
       paymentdb:
         condition: service_healthy
@@ -224,6 +227,7 @@ services:
       - DB_USER=admin
       - DB_PASSWORD=root
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - ZIPKIN_HOST=zipkin
     depends_on:
       notificationdb:
         condition: service_healthy
@@ -240,6 +244,7 @@ services:
     environment:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - MONGODB_URI=mongodb://analyticsdb:27017/analyticsdb
+      - ZIPKIN_HOST=zipkin
     depends_on:
       analyticsdb:
         condition: service_healthy
@@ -258,6 +263,7 @@ services:
       - DB_PORT=5432
       - DB_USER=admin
       - DB_PASSWORD=root
+      - ZIPKIN_HOST=zipkin
     depends_on:
       authdb:
         condition: service_healthy
@@ -275,6 +281,7 @@ services:
       - ACCOUNT_SERVICE_HOST=account-service
       - PAYMENT_SERVICE_HOST=payment-service
       - ANALYTICS_SERVICE_HOST=analytics-service
+      - ZIPKIN_HOST=zipkin
     depends_on:
       - auth-service
       - customer-service
