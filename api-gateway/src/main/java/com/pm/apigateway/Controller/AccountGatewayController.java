@@ -15,7 +15,6 @@ public class AccountGatewayController {
     @GrpcClient("account-service")
     private AccountServGrpc.AccountServBlockingStub stub;
 
-    // helper so we're not duplicating the same 6-field map in every method
     private Map<String, String> accountToMap(Account account) {
         return Map.of(
                 "id", account.getId(),
@@ -34,8 +33,7 @@ public class AccountGatewayController {
         return ResponseEntity.ok(accountToMap(response.getAccount()));
     }
 
-    // both GetAccById and GetAccByCusId use GetAccIdRequest in the proto —
-    // we pass the customerId as the id field
+
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<Map<String, String>> getAccountByCustomerId(@PathVariable String customerId) {
         GetAccIdRequest request = GetAccIdRequest.newBuilder().setId(customerId).build();
@@ -60,7 +58,6 @@ public class AccountGatewayController {
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, String>> updateAccount(@PathVariable String id,
                                                               @RequestBody Map<String, String> body) {
-        // note: the proto field for status in UpdateAccRequest is "stat" not "status"
         UpdateAccRequest request = UpdateAccRequest.newBuilder()
                 .setId(id)
                 .setAccName(body.get("accName"))
