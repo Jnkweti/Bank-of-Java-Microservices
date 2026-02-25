@@ -53,7 +53,9 @@ public class customerGrpcService extends CustomerServiceImplBase{
             CreateCustomerResponse response = CreateCustomerResponse.newBuilder()
                     .setFirstName(dto.getFirstName())
                     .setLastName(dto.getLastName())
-                    .setStatus("Profile has been created!")
+                    .setEmail(dto.getEmail())
+                    .setAddress(dto.getAddress())
+                    .setBirthDate(dto.getBirthDate())
                     .build();
 
             responseObserver.onNext(response);
