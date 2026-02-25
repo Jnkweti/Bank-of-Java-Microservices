@@ -17,11 +17,12 @@ message GetCustomerByIdRequest{
   string id = 1;
 }
 message GetCustomerResponse{
-  string firstName =1;
-  string lastName =2;
-  string email = 3;
-  string address = 4;
-  string birthDate = 5;
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string address = 5;
+  string birthDate = 6;
 }
 message CreateCustomerRequest{
   string firstName = 1;
@@ -32,11 +33,12 @@ message CreateCustomerRequest{
 
 }
 message CreateCustomerResponse{
-  string firstName = 1;
-  string lastName = 2;
-  string email = 3;
-  string address = 4;
-  string birthDate = 5;
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string address = 5;
+  string birthDate = 6;
 }
 
 message UpdateCustomerRequest{
@@ -48,11 +50,12 @@ message UpdateCustomerRequest{
   string birthDate = 6;
 }
 message UpdateCustomerResponse{
-  string firstName =1;
-  string lastName =2;
-  string email = 3;
-  string address = 4;
-  string birthDate = 5;
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string address = 5;
+  string birthDate = 6;
 }
 message DeleteCustomerRequest{
   string id = 1;

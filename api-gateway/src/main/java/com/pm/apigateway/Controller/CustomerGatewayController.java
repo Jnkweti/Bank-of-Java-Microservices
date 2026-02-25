@@ -22,6 +22,7 @@ public class CustomerGatewayController {
         GetCustomerResponse response = stub.getCustomerById(request);
 
         return ResponseEntity.ok(Map.of(
+                "id", response.getId(),
                 "firstName", response.getFirstName(),
                 "lastName", response.getLastName(),
                 "email", response.getEmail(),
@@ -45,6 +46,7 @@ public class CustomerGatewayController {
         CreateCustomerResponse response = stub.createCustomer(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "id", response.getId(),
                 "firstName", response.getFirstName(),
                 "lastName", response.getLastName(),
                 "email", response.getEmail(),
@@ -68,6 +70,7 @@ public class CustomerGatewayController {
         UpdateCustomerResponse response = stub.updateCustomer(request);
 
         return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                "id", response.getId(),
                 "firstName", response.getFirstName(),
                 "lastName", response.getLastName(),
                 "email", response.getEmail(),

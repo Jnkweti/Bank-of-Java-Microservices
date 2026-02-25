@@ -48,14 +48,15 @@ public class customerGrpcService extends CustomerServiceImplBase{
             // use base class validation checks fields passed
             grpcValidation.validate(dto, responseObserver);
 
-            custService.createCustomer(dto);
+            customerResponseDTO created = custService.createCustomer(dto);
 
             CreateCustomerResponse response = CreateCustomerResponse.newBuilder()
-                    .setFirstName(dto.getFirstName())
-                    .setLastName(dto.getLastName())
-                    .setEmail(dto.getEmail())
-                    .setAddress(dto.getAddress())
-                    .setBirthDate(dto.getBirthDate())
+                    .setId(created.getId())
+                    .setFirstName(created.getFirstName())
+                    .setLastName(created.getLastName())
+                    .setEmail(created.getEmail())
+                    .setAddress(created.getAddress())
+                    .setBirthDate(created.getBirthDate())
                     .build();
 
             responseObserver.onNext(response);
@@ -86,6 +87,7 @@ public class customerGrpcService extends CustomerServiceImplBase{
 
 
         GetCustomerResponse response = GetCustomerResponse.newBuilder()
+                .setId(customer.getId())
                 .setFirstName(customer.getFirstName())
                 .setLastName(customer.getLastName())
                 .setEmail(customer.getEmail())
@@ -110,6 +112,7 @@ public class customerGrpcService extends CustomerServiceImplBase{
         custService.updateCustomer(UUID.fromString(request.getId()), dto);
 
         UpdateCustomerResponse response = UpdateCustomerResponse.newBuilder()
+                .setId(request.getId())
                 .setFirstName(request.getFirstName())
                 .setLastName(request.getLastName())
                 .setEmail(request.getEmail())
