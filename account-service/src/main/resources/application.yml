@@ -2,11 +2,9 @@ spring:
   application:
     name: account-service
   datasource:
-    #    url: jdbc:postgresql://customer_db:5432/customerdb Use in docker container
-    #    use below when local
-    url: jdbc:postgresql://localhost:5001/accountdb
-    username: admin
-    password: root
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5001}/accountdb
+    username: ${DB_USER:admin}
+    password: ${DB_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
 
   Jpa:
@@ -28,4 +26,8 @@ grpc:
   server:
     port: 9091
 
-
+proto:
+  service:
+    address: ${CUSTOMER_SERVICE_HOST:localhost}
+    grpc:
+      port: 9090
