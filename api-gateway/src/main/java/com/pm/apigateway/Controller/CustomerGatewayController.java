@@ -16,7 +16,7 @@ public class CustomerGatewayController {
     private CustomerServiceGrpc.CustomerServiceBlockingStub stub;
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String,String>> GetCustomerById(@PathVariable String id){
+    public ResponseEntity<Map<String, String>> GetCustomerById(@PathVariable String id) {
 
         GetCustomerByIdRequest request = GetCustomerByIdRequest.newBuilder().setId(id).build();
         GetCustomerResponse response = stub.getCustomerById(request);
@@ -32,14 +32,14 @@ public class CustomerGatewayController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> CreateCustomer(@RequestBody Map<String,String> body){
+    public ResponseEntity<Map<String, String>> CreateCustomer(@RequestBody Map<String, String> body) {
 
         CreateCustomerRequest request = CreateCustomerRequest.newBuilder()
                 .setFirstName(body.get("firstName"))
                 .setLastName(body.get("lastName"))
                 .setAddress(body.get("address"))
                 .setEmail(body.get("email"))
-                .setBirthDate(body.get("birthdate"))
+                .setBirthDate(body.get("birthDate"))
                 .build();
 
         CreateCustomerResponse response = stub.createCustomer(request);
@@ -53,6 +53,36 @@ public class CustomerGatewayController {
         ));
 
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, String>> UpdateCustomer(@RequestBody Map<String, String> body, @PathVariable String id) {
+
+        UpdateCustomerRequest request = UpdateCustomerRequest.newBuilder().setId(id)
+                .setFirstName(body.get("firstName"))
+                .setLastName(body.get("lastName"))
+                .setAddress(body.get("address"))
+                .setEmail(body.get("email"))
+                .setBirthDate(body.get("birthDate"))
+                .build();
+
+        UpdateCustomerResponse response = stub.updateCustomer(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                "firstName", response.getFirstName(),
+                "lastName", response.getLastName(),
+                "email", response.getEmail(),
+                "address", response.getAddress(),
+                "birthDate", response.getBirthDate()
+        ));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteCustomer(@PathVariable String id) {
+        DeleteCustomerRequest request = DeleteCustomerRequest.newBuilder().setId(id).build();
+        DeleteCustomerResponse response = stub.deleteCustomer(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response.getMessage());
+    }
+
 
 
 }
