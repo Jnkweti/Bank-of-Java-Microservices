@@ -1,6 +1,5 @@
 version: "3.9"
 
-# ─── Local Development Stack ────────────────────────────────────────────────
 # Each service gets its own PostgreSQL container matching the port in its
 # application.yml. No app config changes required.
 #
@@ -9,11 +8,9 @@ version: "3.9"
 # Wipe data:          docker-compose down -v
 #
 # Individual DB only: docker-compose up -d customerdb accountdb paymentdb
-# ────────────────────────────────────────────────────────────────────────────
+
 
 services:
-
-  # ── Databases ──────────────────────────────────────────────────────────────
 
   customerdb:
     image: postgres:16-alpine
@@ -113,7 +110,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Kafka (KRaft mode — no Zookeeper) ──────────────────────────────────────
+  #Kafka (KRaft mode — no Zookeeper)
   # KRaft is Kafka's built-in consensus protocol (Kafka 3.3+).
   # Removes the Zookeeper dependency, simpler to run locally.
 
@@ -121,16 +118,18 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
     ports:
-      - "9094:9092"
+      - "9094:9094"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9094
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      # INTERNAL: container-to-container traffic on port 9092
+      # EXTERNAL: host machine access on port 9094
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -151,7 +150,139 @@ services:
     ports:
       - "9411:9411"
 
-# ── Named Volumes ─────────────────────────────────────────────────────────────
+  # ── App Services ────────────────────────────────────────────────────────────
+
+  customer-service:
+    build:
+      context: .
+      dockerfile: customer.Dockerfile
+    container_name: customer-service
+    ports:
+      - "3001:3001"
+      - "9090:9090"
+    environment:
+      - DB_HOST=customerdb
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=root
+      - ACCOUNT_SERVICE_HOST=account-service
+    depends_on:
+      customerdb:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
+  account-service:
+    build:
+      context: .
+      dockerfile: account.Dockerfile
+    container_name: account-service
+    ports:
+      - "3002:3002"
+      - "9091:9091"
+    environment:
+      - DB_HOST=accountdb
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=root
+      - CUSTOMER_SERVICE_HOST=customer-service
+    depends_on:
+      accountdb:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment.Dockerfile
+    container_name: payment-service
+    ports:
+      - "3003:3003"
+      - "9092:9092"
+    environment:
+      - DB_HOST=paymentdb
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=root
+      - ACCOUNT_SERVICE_HOST=account-service
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      paymentdb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification.Dockerfile
+    container_name: notification-service
+    ports:
+      - "3004:3004"
+    environment:
+      - DB_HOST=notificationdb
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=root
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      notificationdb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: analytics.Dockerfile
+    container_name: analytics-service
+    ports:
+      - "3005:3005"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - MONGODB_URI=mongodb://analyticsdb:27017/analyticsdb
+    depends_on:
+      analyticsdb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth.Dockerfile
+    container_name: auth-service
+    ports:
+      - "3006:3006"
+    environment:
+      - DB_HOST=authdb
+      - DB_PORT=5432
+      - DB_USER=admin
+      - DB_PASSWORD=root
+    depends_on:
+      authdb:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: gateway.Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_HOST=auth-service
+      - CUSTOMER_SERVICE_HOST=customer-service
+      - ACCOUNT_SERVICE_HOST=account-service
+      - PAYMENT_SERVICE_HOST=payment-service
+      - ANALYTICS_SERVICE_HOST=analytics-service
+    depends_on:
+      - auth-service
+      - customer-service
+      - account-service
+      - payment-service
+      - analytics-service
+
+#
 volumes:
   customerdb_data:
   accountdb_data:
