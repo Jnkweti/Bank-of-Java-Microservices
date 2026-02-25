@@ -3,26 +3,26 @@
 ## Architecture Summary
 | Layer | Technology | Hosting |
 |---|---|---|
-| API Gateway | Spring Cloud Gateway (REST in, gRPC out) | ECS Fargate |
+| API Gateway | Custom Spring Boot (REST in, gRPC out) + oauth2-resource-server | ECS Fargate |
 | Microservices | Spring Boot 3.5.x + gRPC | ECS Fargate |
-| Databases | PostgreSQL (one RDS instance, separate schemas per service) | AWS RDS (Multi-AZ) |
-| Messaging | Apache Kafka | AWS MSK Serverless |
-| Auth | JWT via Spring Security Resource Server + Keycloak | ECS Fargate or Cognito |
+| Databases | PostgreSQL (per service) + MongoDB (analytics) | AWS RDS (Multi-AZ) + DocumentDB |
+| Messaging | Apache Kafka (KRaft, no Zookeeper) | AWS MSK Serverless |
+| Auth | Custom JWT (RS256, JJWT 0.12.6) + JWKS endpoint | ECS Fargate |
 | Container Registry | Docker images | Amazon ECR |
 | CI/CD | GitHub Actions → ECR → ECS rolling deploy | GitHub Actions |
-| Observability | Micrometer + CloudWatch + structured JSON logs | AWS CloudWatch |
-| Local Dev | Docker Compose (Kafka, PostgreSQL, Keycloak, Zipkin) | localhost |
+| Observability | Micrometer + CloudWatch + structured JSON logs + Zipkin | AWS CloudWatch |
+| Local Dev | Docker Compose (Kafka, PostgreSQL, MongoDB, Zipkin) | localhost |
 
 ## Service Map
-| Service | REST Port | gRPC Port | Status |
-|---|---|---|---|
-| customer-service | 3001 | 9090 | COMPLETE |
-| account-service | 3002 | 9091 | COMPLETE |
-| payment-service | 3003 | 9092 | COMPLETE |
-| notification-service | 3004 | — | COMPLETE |
-| analytics-service | 3005 | — | COMPLETE |
-| auth-service | 3006 | — | COMPLETE |
-| api-gateway | 8080 | — | Bootstrapped only |
+| Service | REST Port | gRPC Port | DB | Status |
+|---|---|---|---|---|
+| customer-service | 3001 | 9090 | customerdb (PostgreSQL, 5000) | COMPLETE |
+| account-service | 3002 | 9091 | accountdb (PostgreSQL, 5001) | COMPLETE |
+| payment-service | 3003 | 9092 | paymentdb (PostgreSQL, 5002) | COMPLETE |
+| notification-service | 3004 | — | notificationdb (PostgreSQL, 5003) | COMPLETE |
+| analytics-service | 3005 | — | analyticsdb (MongoDB, 27017) | COMPLETE |
+| auth-service | 3006 | — | authdb (PostgreSQL, 5005) | COMPLETE |
+| api-gateway | 8080 | — | — | COMPLETE |
 
 ---
 
@@ -207,19 +207,21 @@ Two options exist. Choose one before starting:
 **Recommendation:** Option A for production. Option B is acceptable for portfolio if time-constrained.
 
 ### 4.2 If Building Custom Auth Service
-- [ ] Add `spring-security-crypto`, `jjwt-api`, `jjwt-impl`, `jjwt-jackson` to `pom.xml`
-- [ ] Create `User.java` entity: `id`, `email`, `passwordHash`, `role` (enum: CUSTOMER, ADMIN), `customerId` (nullable FK)
-- [ ] Create `AuthController.java`:
-  - `POST /api/auth/register` — hash password with BCrypt, create user, return JWT
+- [x] Add `jjwt-api`, `jjwt-impl`, `jjwt-jackson` (0.12.6) to `pom.xml`
+- [x] Create `User.java` entity: `id`, `email`, `passwordHash`, `role` (enum: CUSTOMER, ADMIN) — `@Table(name = "Users")` to avoid PostgreSQL reserved word
+- [x] Create `AuthController.java`:
+  - `POST /api/auth/register` — hash password with BCrypt (strength 12), create user, return JWT
   - `POST /api/auth/login` — validate credentials, return JWT + refresh token
   - `POST /api/auth/refresh` — validate refresh token, issue new JWT
-- [ ] Create `JwtService.java`:
-  - Generate JWT with claims: `sub` (userId), `email`, `role`, `exp` (15 min for access, 7 days for refresh)
-  - Validate JWT signature and expiry
-  - Expose `GET /api/auth/.well-known/jwks.json` — public key for API Gateway to validate tokens
-- [ ] Create `SecurityConfig.java`:
-  - Permit `POST /api/auth/register` and `POST /api/auth/login` without auth
+- [x] Create `JwtService.java`:
+  - RS256 asymmetric signing — private key signs, public key verifies
+  - `@PostConstruct` generates RSA key pair at startup
+  - Access token: 15 min, refresh token: 7 days
+  - Expose `GET /api/auth/.well-known/jwks.json` — RSA public key as JWKS for gateway
+- [x] Create `SecurityConfig.java`:
+  - Permit `/api/auth/**` without auth
   - All other endpoints require valid JWT
+- [x] Unit tests: JwtServiceTest (5), AuthServiceTest (7), AuthControllerTest (7) — 19/19 passing
 
 **Requirement:** Never store plain-text passwords. Use `BCryptPasswordEncoder` with strength 12.
 
@@ -246,35 +248,21 @@ Client
 ```
 
 ### 5.2 Implementation
-- [ ] Add `net.devh:grpc-client-spring-boot-starter:3.1.0.RELEASE` to `pom.xml`
-- [ ] Add `spring-boot-starter-security`, `spring-security-oauth2-resource-server` for JWT validation
-- [ ] Add `spring-boot-starter-web` (this is a REST service, not reactive)
-- [ ] Configure gRPC clients in `application.yml`:
-  ```yaml
-  grpc:
-    client:
-      customer-service:
-        address: static://customer-service:9090
-        negotiation-type: plaintext
-      account-service:
-        address: static://account-service:9091
-        negotiation-type: plaintext
-      payment-service:
-        address: static://payment-service:9092
-        negotiation-type: plaintext
-  ```
-- [ ] Create one `GrpcClient` class per downstream service, injected with `@GrpcClient`
-- [ ] Create one `Controller` per domain, mirroring the REST API of each service:
-  - `CustomerGatewayController` — `/api/customers/**`
-  - `AccountGatewayController` — `/api/accounts/**`
-  - `PaymentGatewayController` — `/api/payments/**`
-  - `AnalyticsGatewayController` — `/api/analytics/**`
-- [ ] Create `SecurityConfig.java`:
-  - Validate JWT on all routes except `/actuator/health`
-  - Extract `role` claim and enforce `@PreAuthorize("hasRole('CUSTOMER')")` etc.
-- [ ] Create `RateLimitFilter.java`:
-  - Use a simple in-memory token bucket (Bucket4j) or defer to AWS WAF in production
-  - Limit: 100 requests/minute per IP
+- [x] Add `net.devh:grpc-client-spring-boot-starter:3.1.0.RELEASE` to `pom.xml`
+- [x] Add `spring-boot-starter-oauth2-resource-server` — validates JWT via JWKS URI (no shared secret)
+- [x] Add `spring-boot-starter-web`
+- [x] Configure gRPC clients in `application.yml` with env var overrides per environment
+- [x] Create gateway controllers (no separate GrpcClient classes — stubs injected directly with `@GrpcClient`):
+  - `CustomerGatewayController` — `/api/customers/**` → customer-service gRPC (9090)
+  - `AccountGatewayController` — `/api/accounts/**` → account-service gRPC (9091)
+  - `PaymentGatewayController` — `/api/payments/**` → payment-service gRPC (9092)
+  - `AnalyticsGatewayController` — `/api/analytics/**` → analytics-service REST (RestTemplate)
+- [x] Create `SecurityConfig.java`:
+  - Validates JWT via JWKS URI pointing to auth-service `/.well-known/jwks.json`
+  - Custom role claim converter (extracts `role` claim → `ROLE_CUSTOMER` / `ROLE_ADMIN`)
+  - `/api/analytics/**` and `/actuator/**` require `ROLE_ADMIN`
+- [x] Create `GlobalExceptionHandler.java` — maps `StatusRuntimeException` → HTTP status codes
+- [ ] Create `RateLimitFilter.java` (deferred — use AWS WAF in production)
 
 ### 5.3 CORS
 - [ ] Configure CORS to allow the frontend origin only
@@ -288,31 +276,15 @@ Client
 > Goal: `docker-compose up` brings the entire platform online with no manual setup.
 
 ### 6.1 docker-compose.yml
-- [ ] Create `/docker-compose.yml` at root of repo:
-  - `postgres` — single instance with init scripts creating all schemas
-  - `kafka` — KRaft mode (no Zookeeper), single broker for local dev
-  - `keycloak` — with realm import file (or skip if using custom auth)
-  - `zipkin` — distributed tracing UI
-  - All 7 application services (each built from their own Dockerfile)
-- [ ] Create `Dockerfile` for each service:
-  ```dockerfile
-  FROM eclipse-temurin:21-jre-alpine
-  WORKDIR /app
-  COPY target/*.jar app.jar
-  EXPOSE <port>
-  ENTRYPOINT ["java", "-jar", "app.jar"]
-  ```
-- [ ] Create `docker/postgres/init.sql` — creates all schemas:
-  ```sql
-  CREATE DATABASE customerdb;
-  CREATE DATABASE accountdb;
-  CREATE DATABASE paymentdb;
-  CREATE DATABASE notificationdb;
-  CREATE DATABASE analyticsdb;
-  CREATE DATABASE authdb;
-  ```
-- [ ] Create `.env.local` with all environment variables for local dev:
-  - DB credentials, Kafka address, service addresses
+- [x] Infrastructure containers: customerdb, accountdb, paymentdb, notificationdb, authdb (PostgreSQL), analyticsdb (MongoDB), kafka (KRaft), zipkin
+- [x] App service containers: all 7 services with env vars, depends_on, and health checks
+- [x] Kafka dual-listener setup: INTERNAL (kafka:9092) for container-to-container, EXTERNAL (localhost:9094) for host access
+- [x] Multi-stage Dockerfiles per service (builder stage with Maven, runtime stage with JRE only):
+  - `customer.Dockerfile`, `account.Dockerfile`, `payment.Dockerfile`
+  - `notification.Dockerfile`, `analytics.Dockerfile`, `auth.Dockerfile`, `gateway.Dockerfile`
+  - Services that depend on proto-config build and install it first in Stage 1
+- [x] All DB URLs use `${DB_HOST:localhost}:${DB_PORT:xxxx}` env vars — no hardcoded addresses
+- [x] All `@Entity` classes have explicit `@Table(name = "...")` to avoid SQL reserved word conflicts
 
 ### 6.2 Environment Variable Strategy
 Every service must be configurable purely via environment variables (12-factor app).
@@ -551,24 +523,32 @@ Before calling this production-ready:
 
 **Database**
 - [ ] All `ddl-auto: update` replaced with Flyway migrations
-- [ ] All hardcoded passwords/hosts removed from `application.yml`
+- [x] All hardcoded passwords/hosts removed from `application.yml` — use `${ENV_VAR:default}`
 
 **Testing**
-- [ ] All services have unit tests passing with `mvn clean verify`
+- [x] customer-service unit tests passing
+- [x] account-service unit tests passing
+- [x] payment-service unit tests passing (26/26)
+- [x] notification-service unit tests passing (15/15)
+- [x] analytics-service unit tests passing (14/14)
+- [x] auth-service unit tests passing (19/19)
+- [ ] Integration tests per service
+- [ ] End-to-end API tests
 
 **Observability**
-- [ ] All services have a `/actuator/health` endpoint returning 200
+- [x] All services have `/actuator/health` endpoint
 - [ ] Structured JSON logging in production profile
 - [ ] No PII in logs
 
 **Security**
 - [ ] gRPC TLS enabled in production
-- [ ] JWT auth enforced on all non-public API Gateway routes
+- [x] JWT auth (RS256) enforced on all non-public API Gateway routes
 - [ ] All secrets in Secrets Manager, not in code or env files committed to git
 
 **Infrastructure**
 - [ ] GitHub Actions CI/CD pipeline running on every push to `main`
-- [ ] Docker Compose brings full stack up locally with `docker-compose up`
+- [x] Docker Compose brings full stack up locally with `docker-compose up`
+- [x] Dockerfiles written for all 7 services (multi-stage builds)
 - [ ] AWS infrastructure is defined as code (CloudFormation or Terraform) — not click-ops
 - [ ] RDS automated backups enabled
 - [ ] MSK Serverless topic retention configured
