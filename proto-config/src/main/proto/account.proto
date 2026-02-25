@@ -26,6 +26,7 @@ message Account {
   AccType type = 4;
   AccStatus status = 5;
   string balance = 6;
+  string accountNumber = 7;
 }
 //Get account by account id params
 message GetAccIdRequest{
@@ -40,7 +41,7 @@ message GetAccByCusIdRequest{
   string cusId = 1;
 }
 message GetAccByCusIdResponse{
-  Account account =1;
+  repeated Account account =1;
 }
 
 //create account params

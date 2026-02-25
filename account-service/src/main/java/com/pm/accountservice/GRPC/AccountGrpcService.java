@@ -31,6 +31,7 @@ public class AccountGrpcService extends AccountServImplBase {
                 .setBalance(result.getAccountBalance())
                 .setType(AccType.valueOf(result.getAccountType()))
                 .setStatus(AccStatus.valueOf(result.getAccountStatus()))
+                .setAccountNumber(result.getAccountNumber())
                 .build();
     }
 

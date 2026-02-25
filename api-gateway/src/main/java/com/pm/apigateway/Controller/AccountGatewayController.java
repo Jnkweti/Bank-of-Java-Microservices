@@ -22,7 +22,8 @@ public class AccountGatewayController {
                 "accName", account.getAccName(),
                 "type", account.getType().name(),
                 "status", account.getStatus().name(),
-                "balance", account.getBalance()
+                "balance", account.getBalance(),
+                "accountNumber", account.getAccountNumber()
         );
     }
 
