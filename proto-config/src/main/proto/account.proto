@@ -27,6 +27,9 @@ message Account {
   AccStatus status = 5;
   string balance = 6;
   string accountNumber = 7;
+  string openedDate = 8;
+  string lastUpdated = 9;
+  string interestRate = 10;
 }
 //Get account by account id params
 message GetAccIdRequest{
@@ -75,7 +78,7 @@ message UpdateAccResponse{
   Account account = 1;
 }
 service AccountServ{
-  rpc GetAccByCusId(GetAccIdRequest) returns (GetAccIDResponse);
+  rpc GetAccByCusId(GetAccByCusIdRequest) returns (GetAccByCusIdResponse);
   rpc GetAccById(GetAccIdRequest) returns (GetAccIDResponse);
   rpc CreateAcc(CreateAccRequest) returns (CreateAccResponse);
   rpc DeleteAccIdRequest(DeleteAccByIdRequest) returns (DeleteAccByIdResponse);

@@ -25,7 +25,7 @@ public class MapAcc {
         if(request.getType() == AccountType.SAVINGS){
             acc.setInterestRate(new BigDecimal(".045"));
         }
-        else if(request.getType() == AccountType.LOAN || acc.getAccountType() == AccountType.CREDIT){
+        else if(request.getType() == AccountType.LOAN || request.getType() == AccountType.CREDIT){
             acc.setInterestRate(new BigDecimal(".0045"));
         }
         else{
@@ -43,8 +43,9 @@ public class MapAcc {
         Acc.setCustomerId(acc.getCustomerId().toString());
         Acc.setAccountType(String.valueOf(acc.getAccountType()));
         Acc.setAccountStatus(String.valueOf(acc.getStatus()));
-        Acc.setInterestRate(acc.getInterestRate().toString());
-        Acc.setLastUpdate(acc.getLastUpdated().toString());
+        Acc.setInterestRate(acc.getInterestRate() != null ? acc.getInterestRate().toString() : "0.0");
+        Acc.setOpenedDate(acc.getOpenedDate() != null ? acc.getOpenedDate().toString() : "");
+        Acc.setLastUpdate(acc.getLastUpdated() != null ? acc.getLastUpdated().toString() : "");
         return Acc;
     }
 

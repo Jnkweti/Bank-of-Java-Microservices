@@ -2,6 +2,7 @@ package com.pm.accountservice.GRPC;
 
 import com.pm.accountservice.DTO.AccRequestDTO;
 import com.pm.accountservice.DTO.AccResponseDTO;
+import java.util.List;
 import com.pm.accountservice.Enum.AccountStatus;
 import com.pm.accountservice.Enum.AccountType;
 import com.pm.accountservice.Service.accountService;
@@ -32,6 +33,9 @@ public class AccountGrpcService extends AccountServImplBase {
                 .setType(AccType.valueOf(result.getAccountType()))
                 .setStatus(AccStatus.valueOf(result.getAccountStatus()))
                 .setAccountNumber(result.getAccountNumber())
+                .setOpenedDate(result.getOpenedDate())
+                .setLastUpdated(result.getLastUpdate())
+                .setInterestRate(result.getInterestRate())
                 .build();
     }
 
@@ -51,6 +55,7 @@ public class AccountGrpcService extends AccountServImplBase {
 
             CreateAccResponse response = CreateAccResponse.newBuilder()
                     .setAccount(buildAccountProto(result))
+                    .setCreated(result.getOpenedDate())
                     .build();
 
             responseObserver.onNext(response);
@@ -81,17 +86,16 @@ public class AccountGrpcService extends AccountServImplBase {
     }
 
     @Override
-    public void getAccByCusId(GetAccIdRequest request, StreamObserver<GetAccIDResponse> responseObserver) {
+    public void getAccByCusId(GetAccByCusIdRequest request, StreamObserver<GetAccByCusIdResponse> responseObserver) {
         try {
-            log.info("getAccByCusId request received, customerId: {}", request.getId());
+            log.info("getAccByCusId request received, customerId: {}", request.getCusId());
 
-            AccResponseDTO result = accService.getAccountByCustomerId(request.getId());
+            List<AccResponseDTO> results = accService.getAccountByCustomerId(request.getCusId());
 
-            GetAccIDResponse response = GetAccIDResponse.newBuilder()
-                    .setAccount(buildAccountProto(result))
-                    .build();
+            GetAccByCusIdResponse.Builder builder = GetAccByCusIdResponse.newBuilder();
+            results.forEach(r -> builder.addAccount(buildAccountProto(r)));
 
-            responseObserver.onNext(response);
+            responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("Error in getAccByCusId: {}", e.getMessage());

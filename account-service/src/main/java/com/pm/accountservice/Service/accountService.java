@@ -37,10 +37,12 @@ public class accountService {
         return MapAcc.toDTO(acc);
     }
 
-    public AccResponseDTO getAccountByCustomerId(String customerId) {
-        account acc = repository.findByCustomerId(UUID.fromString(customerId))
-                .orElseThrow(() -> new AccountNotFoundException("No account found for customer id: " + customerId));
-        return MapAcc.toDTO(acc);
+    public List<AccResponseDTO> getAccountByCustomerId(String customerId) {
+        List<account> accounts = repository.findByCustomerId(UUID.fromString(customerId));
+        if (accounts.isEmpty()) {
+            throw new AccountNotFoundException("No account found for customer id: " + customerId);
+        }
+        return accounts.stream().map(MapAcc::toDTO).toList();
     }
 
     public AccResponseDTO updateAccount(String accountId, AccRequestDTO accRequestDTO) {

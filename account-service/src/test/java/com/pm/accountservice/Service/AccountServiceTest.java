@@ -120,19 +120,20 @@ class AccountServiceTest {
     // --- getAccountByCustomerId ---
 
     @Test
-    void getAccountByCustomerId_shouldReturnDTOWhenFound() {
+    void getAccountByCustomerId_shouldReturnListWhenFound() {
         when(repository.findByCustomerId(testAccount.getCustomerId()))
-                .thenReturn(Optional.of(testAccount));
+                .thenReturn(List.of(testAccount));
 
-        AccResponseDTO result = accountService.getAccountByCustomerId(testAccount.getCustomerId().toString());
+        List<AccResponseDTO> result = accountService.getAccountByCustomerId(testAccount.getCustomerId().toString());
 
-        assertThat(result.getAccountName()).isEqualTo("John's Savings");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAccountName()).isEqualTo("John's Savings");
     }
 
     @Test
     void getAccountByCustomerId_shouldThrowWhenNotFound() {
         UUID customerId = UUID.randomUUID();
-        when(repository.findByCustomerId(customerId)).thenReturn(Optional.empty());
+        when(repository.findByCustomerId(customerId)).thenReturn(List.of());
 
         assertThatThrownBy(() -> accountService.getAccountByCustomerId(customerId.toString()))
                 .isInstanceOf(AccountNotFoundException.class)

@@ -13,5 +13,6 @@ public class AccResponseDTO {
     private String accountStatus;
     private String interestRate;
     private String customerId;
+    private String openedDate;
     private String lastUpdate;
 }
