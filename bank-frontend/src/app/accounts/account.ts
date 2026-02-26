@@ -10,11 +10,12 @@ export class Account {
 
   constructor(private http: HttpClient) { }
 
-  getAccountsByCustomerId(customerId:string): Observable<any>
-  {
+  getAccountsByCustomerId(customerId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/customer/${customerId}`);
   }
 
-
+  createAccount(account: any): Observable<any> {
+    return this.http.post(this.apiUrl, account);
+  }
 }
 
