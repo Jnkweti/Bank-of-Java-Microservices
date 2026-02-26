@@ -308,15 +308,15 @@ Use `${ENV_VAR:default}` syntax so local dev still works without setting every v
 
 ---
 
-## Milestone 7 — Database Migrations
+## Milestone 7 — Database Migrations (Complete)
 > Goal: schema changes are versioned, repeatable, and safe to run in production.
 
-- [ ] Add `flyway-core` to every service's `pom.xml`
-- [ ] Remove `spring.jpa.hibernate.ddl-auto: update` from all `application.yml` files — replace with `validate`
-- [ ] Create `src/main/resources/db/migration/` in each service
-- [ ] Naming convention: `V{number}__{description}.sql` — e.g., `V1__create_customers_table.sql`
-- [ ] First migration per service creates the full initial schema
-- [ ] Each subsequent migration is a new numbered file — never edit an existing migration
+- [x] Add `flyway-core` + `flyway-database-postgresql` to every PostgreSQL service's `pom.xml`
+- [x] Remove `spring.jpa.hibernate.ddl-auto: update` from all `application.yml` files — replace with `validate`
+- [x] Create `src/main/resources/db/migration/` in each service
+- [x] V1 migrations: customer-service, account-service, payment-service, notification-service, auth-service
+- [x] V2 migration for auth-service: rename "Users" → users (PostgreSQL case-sensitivity fix)
+- [x] Naming convention: `V{number}__{description}.sql`
 
 **Why:** `ddl-auto: update` silently drops columns on rename, cannot be rolled back, and is dangerous in production. Flyway gives you a traceable, tested history of every schema change.
 
@@ -490,19 +490,163 @@ Trigger: push to `main` (after CI passes)
 
 ---
 
-## Milestone 13 — Frontend
-> Goal: a working React dashboard that uses the API Gateway.
+## Milestone 13 — Frontend (In Progress — Angular)
+> Goal: a working Angular dashboard that uses the API Gateway.
 
-- [ ] Initialize: `npx create-next-app@latest frontend --typescript --tailwind`
-- [ ] Pages:
-  - `/login` — form → `POST /api/auth/login` → store JWT in `httpOnly` cookie
-  - `/dashboard` — customer overview, account balances
-  - `/transfer` — form to initiate a payment
-  - `/transactions` — list of payments for the logged-in customer
-  - `/analytics` — admin-only charts (payment volume, success rate)
-- [ ] HTTP client: `axios` with interceptor to attach JWT from cookie
-- [ ] State: React Query (`@tanstack/react-query`) for server state, Zustand for UI state
-- [ ] Deploy: Vercel or S3 + CloudFront
+### 13.1 Core Pages (Complete)
+- [x] Angular 19 project with Angular Material (azure/blue theme)
+- [x] Login page — email/password → JWT stored in localStorage
+- [x] Register page — auth register + customer profile creation (chained)
+- [x] Dashboard — fetch customer by email → fetch accounts by customerId → display cards
+- [x] Payment page — send payment form (from/to account, amount, type, description)
+- [x] Create Account page — name + type (Checking/Savings), auto-resolves customerId from JWT
+
+### 13.2 Auth & Security (Complete)
+- [x] AuthService — login, register, getEmailFromToken, isLoggedIn
+- [x] Auth interceptor — attaches Bearer token, handles 401 → redirect to login
+- [x] Auth guard — protects /dashboard, /payment, /create-account routes
+- [x] Environment config — `environment.ts` (dev) / `environment.prod.ts` (Docker)
+
+### 13.3 Navigation (Complete)
+- [x] Material toolbar navbar — conditional links based on auth state
+- [x] Bank of Java link routes to /dashboard (logged in) or /login (logged out)
+
+### 13.4 UX Improvements (TODO)
+- [ ] Form validation on all forms (required fields, email format, password strength)
+- [ ] Loading spinners while API calls are in flight
+- [ ] Global error handling with Material snackbar/toast
+- [ ] 404 page for unknown routes
+- [ ] Disable submit buttons while submitting (prevent double-click)
+- [ ] Active route highlighting in navbar
+
+### 13.5 Missing Pages (TODO)
+- [ ] Payment history — list past transactions per account
+- [ ] Account detail page — full info, transaction history, wire up "View Details" button
+- [ ] Customer profile page — view/edit personal info
+- [ ] Analytics admin page — summary, volume chart, top accounts (ROLE_ADMIN only)
+
+### 13.6 Code Quality (TODO)
+- [ ] TypeScript interfaces for all API responses (replace `any`)
+- [ ] RxJS best practices (switchMap over nested subscribes)
+- [ ] Environment-aware API URLs (done)
+- [ ] Meaningful unit tests for services and components
+
+---
+
+## Milestone 14 — Transaction Ledger Service
+> Goal: immutable double-entry ledger — the foundation of real banking.
+
+Every financial event creates a DEBIT and CREDIT entry. Account balances are derived from the ledger, never stored directly.
+
+- [ ] Domain: `LedgerEntry` (id, transactionId, accountId, type DEBIT/CREDIT, amount, runningBalance, createdAt)
+- [ ] Double-entry on every transaction: debit source + credit destination
+- [ ] Transaction statuses: PENDING → POSTED → CLEARED, or REVERSED
+- [ ] Idempotency via unique transactionId per request
+- [ ] Paginated transaction history with date/type/amount filters
+- [ ] End-of-day reconciliation job (compare ledger totals vs account balances)
+- [ ] Refactor account-service: balance becomes a derived value from ledger, not a stored column
+
+---
+
+## Milestone 15 — Card Service
+> Goal: debit/credit card lifecycle management.
+
+- [ ] Domain: `Card` (id, accountId, cardNumber, type DEBIT/CREDIT, status, expiryDate, dailyLimit)
+- [ ] Card issuance — physical and virtual cards linked to accounts
+- [ ] Card statuses: ACTIVE, FROZEN, LOST, STOLEN, EXPIRED, CANCELLED
+- [ ] Card controls — toggle online purchases, international transactions, ATM
+- [ ] Spending limits — daily and per-transaction caps
+- [ ] Virtual cards — temporary numbers for online shopping
+- [ ] PIN management (hashed, never stored plaintext)
+
+---
+
+## Milestone 16 — Loan & Credit Service
+> Goal: lending products from application through repayment.
+
+- [ ] Loan products: PERSONAL, MORTGAGE, AUTO, LINE_OF_CREDIT
+- [ ] Application flow: collect income/employment → credit check → underwriting → approval/denial
+- [ ] Loan origination: generate amortization schedule, set terms and rate
+- [ ] Disbursement: fund loan to customer's account via ledger
+- [ ] Repayment tracking: monthly payments, principal vs interest split
+- [ ] Late payment: grace period, late fees, penalty interest
+- [ ] Early payoff calculation
+
+---
+
+## Milestone 17 — Fraud Detection Service
+> Goal: real-time threat detection on every transaction.
+
+- [ ] Transaction risk scoring (rules engine or ML model)
+- [ ] Velocity checks — flag unusual frequency (N transactions in X minutes)
+- [ ] Amount anomaly — flag transactions that deviate from customer's pattern
+- [ ] Geo anomaly — transaction in two distant locations in short timeframe
+- [ ] Device/IP anomaly — new device, VPN/proxy detection
+- [ ] Alert generation for human review
+- [ ] Case management workflow for investigators
+- [ ] Account takeover detection (credential stuffing, brute force)
+
+---
+
+## Milestone 18 — Compliance & AML Service
+> Goal: regulatory compliance — anti-money laundering, KYC, reporting.
+
+- [ ] AML screening — check customers against OFAC, PEP, sanctions lists
+- [ ] Transaction monitoring — flag structuring, smurfing, rapid movement patterns
+- [ ] SAR filing — Suspicious Activity Reports
+- [ ] CTR filing — Currency Transaction Reports (cash > $10,000)
+- [ ] CDD / EDD — Customer Due Diligence, Enhanced Due Diligence for high-risk
+- [ ] Regulatory holds — freeze accounts on legal/government orders
+- [ ] Data retention — 5+ year minimum per BSA regulations
+- [ ] Full audit trail on every compliance decision
+
+---
+
+## Milestone 19 — Document Service
+> Goal: statement generation, tax docs, KYC document storage.
+
+- [ ] Monthly/quarterly account statement generation (PDF)
+- [ ] Tax documents — 1099-INT, 1098 (mortgage interest)
+- [ ] KYC document storage — uploaded ID photos, proof of address
+- [ ] Loan documents — promissory notes, disclosures, amortization schedules
+- [ ] Document retrieval — customers download past statements from app
+- [ ] Retention policy — auto-archive/delete per regulatory schedule
+
+---
+
+## Milestone 20 — Fee & Interest Service
+> Goal: automated fee calculation and interest accrual.
+
+- [ ] Account fees — monthly maintenance, paper statement, wire transfer fees
+- [ ] Overdraft fees — NSF charges, overdraft protection fees
+- [ ] Interest accrual — daily calculation, monthly posting to ledger
+- [ ] Interest rate tiers — higher rate for higher balances
+- [ ] Fee waivers — auto-waive if minimum balance met or customer tier qualifies
+- [ ] Promotional rates — introductory APY for new accounts
+
+---
+
+## Milestone 21 — Support & Dispute Service
+> Goal: customer issue tracking and chargeback workflow.
+
+- [ ] Ticket creation — customer submits issue via app
+- [ ] Dispute filing — chargeback / unauthorized transaction dispute
+- [ ] Provisional credit — temporary credit while dispute is investigated
+- [ ] Investigation workflow — gather evidence, contact merchant, resolve
+- [ ] Resolution — credit, deny, partial credit
+- [ ] Regulatory timelines — Reg E: 10 business days to investigate
+
+---
+
+## Milestone 22 — Enhanced Auth (MFA, Device Trust, Sessions)
+> Goal: production-grade authentication beyond basic JWT.
+
+- [ ] MFA — TOTP (Google Authenticator), SMS OTP, email OTP
+- [ ] Device fingerprinting — track trusted devices, flag new ones
+- [ ] Session management — active sessions list, remote logout
+- [ ] Password policy — min length, complexity, breach database check
+- [ ] Account lockout — lock after N failed attempts, unlock via timer or support
+- [ ] Fine-grained RBAC — per-action permissions (can_transfer, can_approve_loans, etc.)
 
 ---
 
@@ -522,7 +666,7 @@ Before calling this production-ready:
       Do NOT delete them — they are needed for local development and debugging.
 
 **Database**
-- [ ] All `ddl-auto: update` replaced with Flyway migrations
+- [x] All `ddl-auto: update` replaced with Flyway migrations
 - [x] All hardcoded passwords/hosts removed from `application.yml` — use `${ENV_VAR:default}`
 
 **Testing**
