@@ -1,1 +1,29 @@
-<p>create-account works!</p>
+<div class="create-account-container">
+  <mat-card class="create-account-card">
+    <div class="brand">
+      <h1>Open New Account</h1>
+      <p>Choose an account type to get started</p>
+    </div>
+
+    <mat-card-content>
+      <mat-form-field appearance="outline">
+        <mat-label>Account Name</mat-label>
+        <input matInput [(ngModel)]="accName" placeholder="e.g. My Checking">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Account Type</mat-label>
+        <mat-select [(ngModel)]="type">
+          <mat-option value="CHECKING">Checking</mat-option>
+          <mat-option value="SAVINGS">Savings</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()">Create Account</button>
+    </mat-card-content>
+  </mat-card>
+</div>
