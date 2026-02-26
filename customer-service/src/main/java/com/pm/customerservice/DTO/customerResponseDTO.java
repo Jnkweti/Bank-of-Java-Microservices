@@ -11,4 +11,5 @@ public class customerResponseDTO {
     private String email;
     private String address;
     private String birthDate;
+    private String registerDate;
 }

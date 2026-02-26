@@ -31,40 +31,36 @@ public class customerGrpcService extends CustomerServiceImplBase{
     @Override
     public void createCustomer(CreateCustomerRequest customerRequest,
     StreamObserver<CreateCustomerResponse> responseObserver){
-        try {
-            log.info("createProfile Request received {}", customerRequest.toString());
+        log.info("createProfile Request received {}", customerRequest.toString());
 
-//          use base class validation checks fields passed
-            grpcValidation.validate(customerRequest, responseObserver);
+        // use base class validation checks fields passed
+        grpcValidation.validate(customerRequest, responseObserver);
 
-            // map gRPC → DTO
-            customerRequestDTO dto = new customerRequestDTO();
-            dto.setFirstName(customerRequest.getFirstName());
-            dto.setLastName(customerRequest.getLastName());
-            dto.setEmail(customerRequest.getEmail());
-            dto.setAddress(customerRequest.getAddress());
-            dto.setBirthDate(customerRequest.getBirthDate());
+        // map gRPC → DTO
+        customerRequestDTO dto = new customerRequestDTO();
+        dto.setFirstName(customerRequest.getFirstName());
+        dto.setLastName(customerRequest.getLastName());
+        dto.setEmail(customerRequest.getEmail());
+        dto.setAddress(customerRequest.getAddress());
+        dto.setBirthDate(customerRequest.getBirthDate());
 
-            // use base class validation checks fields passed
-            grpcValidation.validate(dto, responseObserver);
+        // use base class validation checks fields passed
+        grpcValidation.validate(dto, responseObserver);
 
-            customerResponseDTO created = custService.createCustomer(dto);
+        customerResponseDTO created = custService.createCustomer(dto);
 
-            CreateCustomerResponse response = CreateCustomerResponse.newBuilder()
-                    .setId(created.getId())
-                    .setFirstName(created.getFirstName())
-                    .setLastName(created.getLastName())
-                    .setEmail(created.getEmail())
-                    .setAddress(created.getAddress())
-                    .setBirthDate(created.getBirthDate())
-                    .build();
+        CreateCustomerResponse response = CreateCustomerResponse.newBuilder()
+                .setId(created.getId())
+                .setFirstName(created.getFirstName())
+                .setLastName(created.getLastName())
+                .setEmail(created.getEmail())
+                .setAddress(created.getAddress())
+                .setBirthDate(created.getBirthDate())
+                .setRegisterDate(created.getRegisterDate())
+                .build();
 
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-//            grpcValidation.handleException(e, responseObserver);
-            throw new RuntimeException(e.getMessage());
-        }
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
     @Override
     public void deleteCustomer(DeleteCustomerRequest request, StreamObserver<DeleteCustomerResponse> responseObserver) {
@@ -93,6 +89,7 @@ public class customerGrpcService extends CustomerServiceImplBase{
                 .setEmail(customer.getEmail())
                 .setAddress(customer.getAddress())
                 .setBirthDate(customer.getBirthDate())
+                .setRegisterDate(customer.getRegisterDate())
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -108,16 +105,17 @@ public class customerGrpcService extends CustomerServiceImplBase{
         dto.setEmail(request.getEmail());
         dto.setAddress(request.getAddress());
         dto.setBirthDate(request.getBirthDate());
-        // DTO -> repo
-        custService.updateCustomer(UUID.fromString(request.getId()), dto);
+        // DTO -> repo — capture the actual updated data from DB
+        customerResponseDTO updated = custService.updateCustomer(UUID.fromString(request.getId()), dto);
 
         UpdateCustomerResponse response = UpdateCustomerResponse.newBuilder()
-                .setId(request.getId())
-                .setFirstName(request.getFirstName())
-                .setLastName(request.getLastName())
-                .setEmail(request.getEmail())
-                .setAddress(request.getAddress())
-                .setBirthDate(request.getBirthDate())
+                .setId(updated.getId())
+                .setFirstName(updated.getFirstName())
+                .setLastName(updated.getLastName())
+                .setEmail(updated.getEmail())
+                .setAddress(updated.getAddress())
+                .setBirthDate(updated.getBirthDate())
+                .setRegisterDate(updated.getRegisterDate())
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();

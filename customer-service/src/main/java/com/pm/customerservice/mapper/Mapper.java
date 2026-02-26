@@ -19,6 +19,7 @@ public class Mapper {
         dto.setEmail(customer.getEmail());
         dto.setAddress(customer.getAddress());
         dto.setBirthDate(customer.getBirthDate().toString());
+        dto.setRegisterDate(customer.getRegisterDate() != null ? customer.getRegisterDate().toString() : "");
         return dto;
     }
 

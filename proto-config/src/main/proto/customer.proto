@@ -23,6 +23,7 @@ message GetCustomerResponse{
   string email = 4;
   string address = 5;
   string birthDate = 6;
+  string registerDate = 7;
 }
 message CreateCustomerRequest{
   string firstName = 1;
@@ -39,6 +40,7 @@ message CreateCustomerResponse{
   string email = 4;
   string address = 5;
   string birthDate = 6;
+  string registerDate = 7;
 }
 
 message UpdateCustomerRequest{
@@ -56,6 +58,7 @@ message UpdateCustomerResponse{
   string email = 4;
   string address = 5;
   string birthDate = 6;
+  string registerDate = 7;
 }
 message DeleteCustomerRequest{
   string id = 1;
