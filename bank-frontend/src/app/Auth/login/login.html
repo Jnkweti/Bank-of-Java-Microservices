@@ -1,0 +1,17 @@
+<div>
+  <div>
+    <h2>Login</h2>
+  </div>
+  <div>
+    <label>Email</label>
+    <input [(ngModel)]="email" type="email">
+    <br>
+    <label>Password</label>
+    <input [(ngModel)]="password" type="password">
+  </div>
+  <button (click)="onLogin()">Login</button>
+
+  @if (errorMessage) {
+    <p>{{errorMessage}}</p>
+  }
+</div>
