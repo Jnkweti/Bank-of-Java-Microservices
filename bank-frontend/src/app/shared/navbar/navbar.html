@@ -1,5 +1,5 @@
 <mat-toolbar color="primary">
-  <a routerLink="/" mat-button>Bank of Java</a>
+  <a [routerLink]="isLoggedIn() ? '/dashboard' : '/login'" mat-button>Bank of Java</a>
 
   <span style="flex: 1 1 auto;"></span>
 
