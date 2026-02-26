@@ -33,6 +33,13 @@ public class CustomerGatewayController {
 
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Map<String, String>> getCustomerByEmail(@PathVariable String email) {
+        GetCustomerIdByEmailRequest request = GetCustomerIdByEmailRequest.newBuilder().setEmail(email).build();
+        GetCustomerIdByEmailResponse response = stub.getCustomerId(request);
+        return ResponseEntity.ok(Map.of("id", response.getId()));
+    }
+
     @PostMapping
     public ResponseEntity<Map<String, String>> CreateCustomer(@RequestBody Map<String, String> body) {
 
