@@ -6,21 +6,29 @@
     </div>
 
     <mat-card-content>
-      <mat-form-field appearance="outline">
-        <mat-label>Email Address</mat-label>
-        <input matInput [(ngModel)]="email" type="email" placeholder="you@example.com">
-      </mat-form-field>
+      <form #loginForm="ngForm">
+        <mat-form-field appearance="outline">
+          <mat-label>Email Address</mat-label>
+          <input matInput [(ngModel)]="email" name="email" type="email" required email #emailRef="ngModel" placeholder="you@example.com">
+          @if (emailRef.touched && emailRef.errors) {
+            <mat-error>Enter a valid email address</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Password</mat-label>
-        <input matInput [(ngModel)]="password" type="password">
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput [(ngModel)]="password" name="password" type="password" required #passwordRef="ngModel">
+          @if (passwordRef.touched && passwordRef.errors?.['required']) {
+            <mat-error>Password is required</mat-error>
+          }
+        </mat-form-field>
 
-      @if (errorMessage) {
-        <p class="error">{{ errorMessage }}</p>
-      }
+        @if (errorMessage) {
+          <p class="error">{{ errorMessage }}</p>
+        }
 
-      <button mat-raised-button color="primary" class="login-btn" (click)="onLogin()">Sign In</button>
+        <button mat-raised-button color="primary" class="login-btn" (click)="onLogin()" [disabled]="loginForm.invalid">Sign In</button>
+      </form>
 
       <div class="register-link">
         <span>Don't have an account?</span>

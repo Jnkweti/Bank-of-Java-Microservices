@@ -6,44 +6,57 @@
     </div>
 
     <mat-card-content>
-      <mat-form-field appearance="outline">
-        <mat-label>From Account ID</mat-label>
-        <input matInput [(ngModel)]="fromAccountId" placeholder="Source account UUID">
-      </mat-form-field>
+      <form #paymentForm="ngForm">
+        <mat-form-field appearance="outline">
+          <mat-label>From Account ID</mat-label>
+          <input matInput [(ngModel)]="fromAccountId" name="fromAccountId" required #fromRef="ngModel" placeholder="Source account UUID">
+          @if (fromRef.touched && fromRef.errors?.['required']) {
+            <mat-error>Source account is required</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>To Account ID</mat-label>
-        <input matInput [(ngModel)]="toAccountId" placeholder="Destination account UUID">
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>To Account ID</mat-label>
+          <input matInput [(ngModel)]="toAccountId" name="toAccountId" required #toRef="ngModel" placeholder="Destination account UUID">
+          @if (toRef.touched && toRef.errors?.['required']) {
+            <mat-error>Destination account is required</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Amount</mat-label>
-        <input matInput [(ngModel)]="amount" type="number" placeholder="0.00">
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Amount</mat-label>
+          <input matInput [(ngModel)]="amount" name="amount" type="number" required min="0.01" #amountRef="ngModel" placeholder="0.00">
+          @if (amountRef.touched && amountRef.errors?.['required']) {
+            <mat-error>Amount is required</mat-error>
+          } @else if (amountRef.touched && amountRef.errors?.['min']) {
+            <mat-error>Amount must be greater than zero</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Payment Type</mat-label>
-        <mat-select [(ngModel)]="type">
-          <mat-option value="TRANSFER">Transfer</mat-option>
-          <mat-option value="DEPOSIT">Deposit</mat-option>
-          <mat-option value="WITHDRAWAL">Withdrawal</mat-option>
-        </mat-select>
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Type</mat-label>
+          <mat-select [(ngModel)]="type" name="type" required>
+            <mat-option value="TRANSFER">Transfer</mat-option>
+            <mat-option value="DEPOSIT">Deposit</mat-option>
+            <mat-option value="WITHDRAWAL">Withdrawal</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Description</mat-label>
-        <input matInput [(ngModel)]="description" placeholder="What's this payment for?">
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <input matInput [(ngModel)]="description" name="description" placeholder="What's this payment for?">
+        </mat-form-field>
 
-      @if (successMessage) {
-        <p class="success">{{ successMessage }}</p>
-      }
+        @if (successMessage) {
+          <p class="success">{{ successMessage }}</p>
+        }
 
-      @if (errorMessage) {
-        <p class="error">{{ errorMessage }}</p>
-      }
+        @if (errorMessage) {
+          <p class="error">{{ errorMessage }}</p>
+        }
 
-      <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()">Send Payment</button>
+        <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()" [disabled]="paymentForm.invalid">Send Payment</button>
+      </form>
     </mat-card-content>
   </mat-card>
 </div>

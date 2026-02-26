@@ -6,43 +6,65 @@
     </div>
 
     <mat-card-content>
-      <div class="form-row">
+      <form #registerForm="ngForm">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input matInput [(ngModel)]="firstName" name="firstName" required #firstNameRef="ngModel">
+            @if (firstNameRef.touched && firstNameRef.errors?.['required']) {
+              <mat-error>First name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input matInput [(ngModel)]="lastName" name="lastName" required #lastNameRef="ngModel">
+            @if (lastNameRef.touched && lastNameRef.errors?.['required']) {
+              <mat-error>Last name is required</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
         <mat-form-field appearance="outline">
-          <mat-label>First Name</mat-label>
-          <input matInput [(ngModel)]="firstName">
+          <mat-label>Email Address</mat-label>
+          <input matInput [(ngModel)]="email" name="email" type="email" required email #emailRef="ngModel" placeholder="you@example.com">
+          @if (emailRef.touched && emailRef.errors) {
+            <mat-error>Enter a valid email address</mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Last Name</mat-label>
-          <input matInput [(ngModel)]="lastName">
+          <mat-label>Password</mat-label>
+          <input matInput [(ngModel)]="password" name="password" type="password" required minlength="8" #passwordRef="ngModel">
+          @if (passwordRef.touched && passwordRef.errors?.['required']) {
+            <mat-error>Password is required</mat-error>
+          } @else if (passwordRef.touched && passwordRef.errors?.['minlength']) {
+            <mat-error>Password must be at least 8 characters</mat-error>
+          }
         </mat-form-field>
-      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Email Address</mat-label>
-        <input matInput [(ngModel)]="email" type="email" placeholder="you@example.com">
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Address</mat-label>
+          <input matInput [(ngModel)]="address" name="address" required #addressRef="ngModel">
+          @if (addressRef.touched && addressRef.errors?.['required']) {
+            <mat-error>Address is required</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Password</mat-label>
-        <input matInput [(ngModel)]="password" type="password">
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput [(ngModel)]="birthDate" name="birthDate" type="date" required #birthDateRef="ngModel">
+          @if (birthDateRef.touched && birthDateRef.errors?.['required']) {
+            <mat-error>Date of birth is required</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Address</mat-label>
-        <input matInput [(ngModel)]="address">
-      </mat-form-field>
+        @if (errorMessage) {
+          <p class="error">{{ errorMessage }}</p>
+        }
 
-      <mat-form-field appearance="outline">
-        <mat-label>Date of Birth</mat-label>
-        <input matInput [(ngModel)]="birthDate" type="date">
-      </mat-form-field>
-
-      @if (errorMessage) {
-        <p class="error">{{ errorMessage }}</p>
-      }
-
-      <button mat-raised-button color="primary" class="register-btn" (click)="onRegister()">Register</button>
+        <button mat-raised-button color="primary" class="register-btn" (click)="onRegister()" [disabled]="registerForm.invalid">Register</button>
+      </form>
 
       <div class="login-link">
         <span>Already have an account?</span>

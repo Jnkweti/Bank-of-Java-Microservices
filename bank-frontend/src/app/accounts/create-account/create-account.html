@@ -6,24 +6,29 @@
     </div>
 
     <mat-card-content>
-      <mat-form-field appearance="outline">
-        <mat-label>Account Name</mat-label>
-        <input matInput [(ngModel)]="accName" placeholder="e.g. My Checking">
-      </mat-form-field>
+      <form #createForm="ngForm">
+        <mat-form-field appearance="outline">
+          <mat-label>Account Name</mat-label>
+          <input matInput [(ngModel)]="accName" name="accName" required #accNameRef="ngModel" placeholder="e.g. My Checking">
+          @if (accNameRef.touched && accNameRef.errors?.['required']) {
+            <mat-error>Account name is required</mat-error>
+          }
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Account Type</mat-label>
-        <mat-select [(ngModel)]="type">
-          <mat-option value="CHECKING">Checking</mat-option>
-          <mat-option value="SAVINGS">Savings</mat-option>
-        </mat-select>
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Account Type</mat-label>
+          <mat-select [(ngModel)]="type" name="type" required>
+            <mat-option value="CHECKING">Checking</mat-option>
+            <mat-option value="SAVINGS">Savings</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-      @if (errorMessage) {
-        <p class="error">{{ errorMessage }}</p>
-      }
+        @if (errorMessage) {
+          <p class="error">{{ errorMessage }}</p>
+        }
 
-      <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()">Create Account</button>
+        <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()" [disabled]="createForm.invalid">Create Account</button>
+      </form>
     </mat-card-content>
   </mat-card>
 </div>
