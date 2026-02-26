@@ -17,7 +17,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -126,24 +128,37 @@ public class AnalyticsService {
     public List<TopAccountDTO> getTopAccounts(int limit) {
         if (limit <= 0) limit = 10;
 
-        // Pipeline:
-        // 1. $group  — bucket by fromAccountId, sum all amounts sent
-        // 2. $sort   — descending so the highest sender is first
-        // 3. $limit  — take only the top N results
-        Aggregation agg = Aggregation.newAggregation(
-                Aggregation.group("fromAccountId").sum("amount").as("totalSent"),
-                Aggregation.sort(Sort.Direction.DESC, "totalSent"),
-                Aggregation.limit(limit));
+        // Two pipelines: one for sent volume, one for received volume.
+        // Merged in Java so every account's total reflects both directions.
+        Aggregation sentAgg = Aggregation.newAggregation(
+                Aggregation.group("fromAccountId").sum("amount").as("volume"));
+        Aggregation receivedAgg = Aggregation.newAggregation(
+                Aggregation.group("toAccountId").sum("amount").as("volume"));
 
-        AggregationResults<Document> results =
-                mongoTemplate.aggregate(agg, PaymentEventRecord.class, Document.class);
+        Map<String, BigDecimal> volumeByAccount = new HashMap<>();
 
-        // Each result doc: { "_id": "ACC-001", "totalSent": 15000.00 }
-        return results.getMappedResults().stream()
-                .map(doc -> new TopAccountDTO(
-                        doc.getString("_id"),
-                        new BigDecimal(doc.get("totalSent").toString())
-                                .setScale(2, RoundingMode.HALF_UP).toPlainString()))
+        // Add sent volumes
+        for (Document doc : mongoTemplate.aggregate(sentAgg, PaymentEventRecord.class, Document.class).getMappedResults()) {
+            String accountId = doc.getString("_id");
+            BigDecimal amount = new BigDecimal(doc.get("volume").toString());
+            volumeByAccount.merge(accountId, amount, BigDecimal::add);
+        }
+
+        // Add received volumes
+        for (Document doc : mongoTemplate.aggregate(receivedAgg, PaymentEventRecord.class, Document.class).getMappedResults()) {
+            String accountId = doc.getString("_id");
+            BigDecimal amount = new BigDecimal(doc.get("volume").toString());
+            volumeByAccount.merge(accountId, amount, BigDecimal::add);
+        }
+
+        // Sort descending by total volume and take top N
+        int cap = limit;
+        return volumeByAccount.entrySet().stream()
+                .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+                .limit(cap)
+                .map(e -> new TopAccountDTO(
+                        e.getKey(),
+                        e.getValue().setScale(2, RoundingMode.HALF_UP).toPlainString()))
                 .toList();
     }
 }

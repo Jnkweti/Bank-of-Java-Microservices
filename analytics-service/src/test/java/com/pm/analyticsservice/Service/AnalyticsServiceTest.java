@@ -122,18 +122,29 @@ class AnalyticsServiceTest {
     // ── getTopAccounts ───────────────────────────────────────────────────────
 
     @Test
-    void getTopAccounts_shouldReturnTopSenders() {
-        Document acc1 = new Document("_id", "ACC-001").append("totalSent", "15000.00");
-        Document acc2 = new Document("_id", "ACC-002").append("totalSent", "9500.00");
-        AggregationResults<Document> aggResult = buildMockResults(List.of(acc1, acc2));
+    void getTopAccounts_shouldCombineSentAndReceivedVolume() {
+        // ACC-001 sends 10000, ACC-002 sends 5000
+        Document sent1 = new Document("_id", "ACC-001").append("volume", "10000.00");
+        Document sent2 = new Document("_id", "ACC-002").append("volume", "5000.00");
+        AggregationResults<Document> sentResult = buildMockResults(List.of(sent1, sent2));
+
+        // ACC-002 receives 10000, ACC-001 receives 5000
+        Document recv1 = new Document("_id", "ACC-002").append("volume", "10000.00");
+        Document recv2 = new Document("_id", "ACC-001").append("volume", "5000.00");
+        AggregationResults<Document> recvResult = buildMockResults(List.of(recv1, recv2));
+
+        // First call = sent pipeline, second call = received pipeline
         when(mongoTemplate.aggregate(any(Aggregation.class), eq(PaymentEventRecord.class), eq(Document.class)))
-                .thenReturn(aggResult);
+                .thenReturn(sentResult)
+                .thenReturn(recvResult);
 
         List<TopAccountDTO> top = analyticsService.getTopAccounts(5);
 
+        // ACC-001: 10000 sent + 5000 received = 15000
+        // ACC-002: 5000 sent + 10000 received = 15000
         assertThat(top).hasSize(2);
-        assertThat(top.get(0).getAccountId()).isEqualTo("ACC-001");
         assertThat(top.get(0).getTotalVolume()).isEqualTo("15000.00");
+        assertThat(top.get(1).getTotalVolume()).isEqualTo("15000.00");
     }
 
     @Test
