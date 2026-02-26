@@ -5,16 +5,13 @@ import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
-export class Account {
-  private apiUrl = 'http://localhost:8080/api/accounts';
+export class Customer {
+  private apiUrl = 'http://localhost:8080/api/customers';
 
   constructor(private http: HttpClient) { }
 
-  getAccountsByCustomerId(customerId:string): Observable<any>
-  {
-    return this.http.get(`${this.apiUrl}/customer/${customerId}`);
+  getCustomerByEmail(email: string){
+      return this.http.get(`${this.apiUrl}/email/${email}`);
   }
 
-
 }
-

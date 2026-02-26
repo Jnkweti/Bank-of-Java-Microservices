@@ -17,4 +17,15 @@ export class AuthService {
   register(email:string, password:string): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, {email:email, password:password});
   }
+
+  getEmailFromToken():string | null {
+    let token : any = localStorage.getItem('token');
+    if(!token) return null;
+    token = token.split('.');
+    token = JSON.parse(atob(token[1])).email;
+    return token;
+  }
+  ifLoggedIn(): boolean{
+    return !!localStorage.getItem('token');
+  }
 }

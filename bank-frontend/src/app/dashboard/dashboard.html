@@ -1,1 +1,11 @@
-<p>dashboard works!</p>
+<h2>My Accounts</h2>
+
+@for (account of accounts; track account.id) {
+  <div>
+    <h3>{{ account.accName }}</h3>
+    <p>Balance: {{ account.balance }}</p>
+    <p>Type: {{ account.type }}</p>
+    <p>Status: {{ account.status }}</p>
+  </div>
+}
+
