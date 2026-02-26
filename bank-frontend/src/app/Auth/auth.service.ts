@@ -25,7 +25,7 @@ export class AuthService {
     token = JSON.parse(atob(token[1])).email;
     return token;
   }
-  ifLoggedIn(): boolean{
+  isLoggedIn(): boolean{
     return !!localStorage.getItem('token');
   }
 }

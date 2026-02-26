@@ -1,0 +1,13 @@
+<mat-toolbar color="primary">
+  <a routerLink="/" mat-button>Bank of Java</a>
+
+  <span style="flex: 1 1 auto;"></span>
+
+  @if (isLoggedIn()) {
+    <a routerLink="/dashboard" mat-button>Dashboard</a>
+    <button mat-button (click)="logout()">Logout</button>
+  } @else {
+    <a routerLink="/login" mat-button>Login</a>
+    <a routerLink="/register" mat-button>Register</a>
+  }
+</mat-toolbar>

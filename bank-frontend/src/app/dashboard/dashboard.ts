@@ -1,17 +1,18 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Account } from '../accounts/account';
 import { Customer } from '../customers/customer';
 import { AuthService } from '../Auth/auth.service';
-
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [],
+  imports: [MatCardModule, MatButtonModule, MatIconModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-
-export class Dashboard  implements OnInit {
+export class Dashboard implements OnInit {
   accounts: any[] = [];
 
   constructor(
@@ -34,7 +35,4 @@ export class Dashboard  implements OnInit {
       error: (err: any) => { console.log('Failed to get customer', err) }
     });
   }
-
-
-
 }

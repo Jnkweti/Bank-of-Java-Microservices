@@ -1,0 +1,82 @@
+.dashboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.dashboard-header {
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 500;
+    color: #1a1a2e;
+    margin: 0;
+  }
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+
+.account-card {
+  .account-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: #1976d2;
+  }
+}
+
+.balance {
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0 12px;
+
+  .balance-label {
+    font-size: 13px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .balance-amount {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+}
+
+.account-details {
+  .status {
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: #e0e0e0;
+    color: #666;
+
+    &.active {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+  }
+
+  p {
+    font-size: 18px;
+    margin-top: 16px;
+  }
+}

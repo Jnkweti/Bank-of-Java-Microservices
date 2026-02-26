@@ -1,17 +1,31 @@
-<div>
-  <div>
-    <h2>Register</h2>
-  </div>
-  <div>
-    <label>Email</label>
-    <input [(ngModel)]="email" type="email">
-    <br>
-    <label>Password</label>
-    <input [(ngModel)]="password" type="password">
-  </div>
-  <button (click)="onRegister()">Register</button>
+<div class="register-container">
+  <mat-card class="register-card">
+    <div class="brand">
+      <h1>Bank of Java</h1>
+      <p>Create your account</p>
+    </div>
 
-  @if (errorMessage) {
-    <p>{{errorMessage}}</p>
-  }
+    <mat-card-content>
+      <mat-form-field appearance="outline">
+        <mat-label>Email Address</mat-label>
+        <input matInput [(ngModel)]="email" type="email" placeholder="you@example.com">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input matInput [(ngModel)]="password" type="password">
+      </mat-form-field>
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <button mat-raised-button color="primary" class="register-btn" (click)="onRegister()">Register</button>
+
+      <div class="login-link">
+        <span>Already have an account?</span>
+        <a mat-button color="primary" routerLink="/login">Sign In</a>
+      </div>
+    </mat-card-content>
+  </mat-card>
 </div>
