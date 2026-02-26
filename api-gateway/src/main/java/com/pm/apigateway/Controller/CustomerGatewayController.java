@@ -27,7 +27,8 @@ public class CustomerGatewayController {
                 "lastName", response.getLastName(),
                 "email", response.getEmail(),
                 "address", response.getAddress(),
-                "birthDate", response.getBirthDate()
+                "birthDate", response.getBirthDate(),
+                "registerDate", response.getRegisterDate()
         ));
 
     }
@@ -51,7 +52,8 @@ public class CustomerGatewayController {
                 "lastName", response.getLastName(),
                 "email", response.getEmail(),
                 "address", response.getAddress(),
-                "birthDate", response.getBirthDate()
+                "birthDate", response.getBirthDate(),
+                "registerDate", response.getRegisterDate()
         ));
 
     }
@@ -75,7 +77,8 @@ public class CustomerGatewayController {
                 "lastName", response.getLastName(),
                 "email", response.getEmail(),
                 "address", response.getAddress(),
-                "birthDate", response.getBirthDate()
+                "birthDate", response.getBirthDate(),
+                "registerDate", response.getRegisterDate()
         ));
     }
 

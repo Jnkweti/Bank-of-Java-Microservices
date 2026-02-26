@@ -25,7 +25,8 @@ public class PaymentGatewayController {
                 "status", payment.getStatus().name(),
                 "type", payment.getType().name(),
                 "description", payment.getDescription(),
-                "createdAt", payment.getCreatedAt()
+                "createdAt", payment.getCreatedAt(),
+                "updatedAt", payment.getUpdatedAt()
         );
     }
 

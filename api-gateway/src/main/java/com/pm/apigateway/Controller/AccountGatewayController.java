@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -16,14 +17,17 @@ public class AccountGatewayController {
     private AccountServGrpc.AccountServBlockingStub stub;
 
     private Map<String, String> accountToMap(Account account) {
-        return Map.of(
-                "id", account.getId(),
-                "customerId", account.getCustomerId(),
-                "accName", account.getAccName(),
-                "type", account.getType().name(),
-                "status", account.getStatus().name(),
-                "balance", account.getBalance(),
-                "accountNumber", account.getAccountNumber()
+        return Map.ofEntries(
+                Map.entry("id", account.getId()),
+                Map.entry("customerId", account.getCustomerId()),
+                Map.entry("accName", account.getAccName()),
+                Map.entry("type", account.getType().name()),
+                Map.entry("status", account.getStatus().name()),
+                Map.entry("balance", account.getBalance()),
+                Map.entry("accountNumber", account.getAccountNumber()),
+                Map.entry("openedDate", account.getOpenedDate()),
+                Map.entry("lastUpdated", account.getLastUpdated()),
+                Map.entry("interestRate", account.getInterestRate())
         );
     }
 
@@ -36,10 +40,13 @@ public class AccountGatewayController {
 
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<Map<String, String>> getAccountByCustomerId(@PathVariable String customerId) {
-        GetAccIdRequest request = GetAccIdRequest.newBuilder().setId(customerId).build();
-        GetAccIDResponse response = stub.getAccByCusId(request);
-        return ResponseEntity.ok(accountToMap(response.getAccount()));
+    public ResponseEntity<List<Map<String, String>>> getAccountByCustomerId(@PathVariable String customerId) {
+        GetAccByCusIdRequest request = GetAccByCusIdRequest.newBuilder().setCusId(customerId).build();
+        GetAccByCusIdResponse response = stub.getAccByCusId(request);
+        List<Map<String, String>> accounts = response.getAccountList().stream()
+                .map(this::accountToMap)
+                .toList();
+        return ResponseEntity.ok(accounts);
     }
 
     @PostMapping
