@@ -7,8 +7,17 @@
 }
 
 .register-card {
-  width: 420px;
+  width: 480px;
   padding: 32px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field {
+    flex: 1;
+  }
 }
 
 .brand {

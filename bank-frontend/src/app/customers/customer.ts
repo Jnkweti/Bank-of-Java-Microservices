@@ -10,8 +10,11 @@ export class Customer {
 
   constructor(private http: HttpClient) { }
 
-  getCustomerByEmail(email: string){
-      return this.http.get(`${this.apiUrl}/email/${email}`);
+  getCustomerByEmail(email: string) {
+    return this.http.get(`${this.apiUrl}/email/${email}`);
   }
 
+  createCustomer(customer: any): Observable<any> {
+    return this.http.post(this.apiUrl, customer);
+  }
 }

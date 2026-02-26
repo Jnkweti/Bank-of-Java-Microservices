@@ -6,6 +6,18 @@
     </div>
 
     <mat-card-content>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>First Name</mat-label>
+          <input matInput [(ngModel)]="firstName">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Last Name</mat-label>
+          <input matInput [(ngModel)]="lastName">
+        </mat-form-field>
+      </div>
+
       <mat-form-field appearance="outline">
         <mat-label>Email Address</mat-label>
         <input matInput [(ngModel)]="email" type="email" placeholder="you@example.com">
@@ -14,6 +26,16 @@
       <mat-form-field appearance="outline">
         <mat-label>Password</mat-label>
         <input matInput [(ngModel)]="password" type="password">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Address</mat-label>
+        <input matInput [(ngModel)]="address">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date of Birth</mat-label>
+        <input matInput [(ngModel)]="birthDate" type="date">
       </mat-form-field>
 
       @if (errorMessage) {

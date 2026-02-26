@@ -1,1 +1,49 @@
-<p>payment works!</p>
+<div class="payment-container">
+  <mat-card class="payment-card">
+    <div class="brand">
+      <h1>Send Payment</h1>
+      <p>Transfer funds between accounts</p>
+    </div>
+
+    <mat-card-content>
+      <mat-form-field appearance="outline">
+        <mat-label>From Account ID</mat-label>
+        <input matInput [(ngModel)]="fromAccountId" placeholder="Source account UUID">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To Account ID</mat-label>
+        <input matInput [(ngModel)]="toAccountId" placeholder="Destination account UUID">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Amount</mat-label>
+        <input matInput [(ngModel)]="amount" type="number" placeholder="0.00">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Payment Type</mat-label>
+        <mat-select [(ngModel)]="type">
+          <mat-option value="TRANSFER">Transfer</mat-option>
+          <mat-option value="DEPOSIT">Deposit</mat-option>
+          <mat-option value="WITHDRAWAL">Withdrawal</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <input matInput [(ngModel)]="description" placeholder="What's this payment for?">
+      </mat-form-field>
+
+      @if (successMessage) {
+        <p class="success">{{ successMessage }}</p>
+      }
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()">Send Payment</button>
+    </mat-card-content>
+  </mat-card>
+</div>
