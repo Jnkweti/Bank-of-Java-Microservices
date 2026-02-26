@@ -25,7 +25,11 @@ grpc:
       address: static://${PAYMENT_SERVICE_HOST:localhost}:9092
       negotiation-type: plaintext
 
-# analytics-service is REST-only, so we forward via RestTemplate
+# auth-service and analytics-service are REST-only, so we forward via RestTemplate
+auth:
+  service:
+    url: http://${AUTH_SERVICE_HOST:localhost}:3006
+
 analytics:
   service:
     url: http://${ANALYTICS_SERVICE_HOST:localhost}:3005
