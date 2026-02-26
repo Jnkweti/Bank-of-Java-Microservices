@@ -74,6 +74,12 @@ public class AuthService {
             throw new InvalidCredentialsException("Refresh token is invalid or expired");
         }
 
+        // reject access tokens submitted to the refresh endpoint
+        String tokenType = claims.get("type", String.class);
+        if (!"refresh".equals(tokenType)) {
+            throw new InvalidCredentialsException("Token is not a refresh token");
+        }
+
         Long userId = Long.parseLong(claims.getSubject());
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidCredentialsException("User no longer exists"));

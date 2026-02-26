@@ -109,6 +109,7 @@ class AuthServiceTest {
     void refresh_shouldReturnNewAccessToken_whenTokenIsValid() {
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn("1");
+        when(claims.get("type", String.class)).thenReturn("refresh");
         when(jwtService.validateToken("valid-refresh")).thenReturn(claims);
 
         User user = buildUser(1L, "alice@bank.com", "hashed");

@@ -54,6 +54,7 @@ public class JwtService {
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole().name())
+                .claim("type", "access")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessTokenExpiryMs))
                 .signWith(privateKey)
@@ -64,6 +65,7 @@ public class JwtService {
     public String generateRefreshToken(User user) {
         return Jwts.builder()
                 .subject(user.getId().toString())
+                .claim("type", "refresh")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiryMs))
                 .signWith(privateKey)
