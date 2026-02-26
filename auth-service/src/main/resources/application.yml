@@ -10,9 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      # update: auto-creates/updates tables from entity classes.
-      # Fine for dev — replace with Flyway migrations before production.
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
