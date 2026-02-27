@@ -47,10 +47,6 @@
           <input matInput [(ngModel)]="description" name="description" placeholder="What's this payment for?">
         </mat-form-field>
 
-        @if (successMessage) {
-          <p class="success">{{ successMessage }}</p>
-        }
-
         @if (errorMessage) {
           <p class="error">{{ errorMessage }}</p>
         }

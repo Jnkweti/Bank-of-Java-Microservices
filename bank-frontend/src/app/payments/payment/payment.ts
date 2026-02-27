@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { NotificationService } from '../../shared/notification.service';
 
 @Component({
   selector: 'app-payment',
@@ -20,14 +21,12 @@ export class Payment {
   amount = '';
   description = '';
   type = 'TRANSFER';
-  successMessage = '';
   errorMessage = '';
   loading = false;
 
-  constructor(private paymentService: PaymentService) {}
+  constructor(private paymentService: PaymentService, private notify: NotificationService) {}
 
   onSubmit() {
-    this.successMessage = '';
     this.errorMessage = '';
     this.loading = true;
 
@@ -39,11 +38,11 @@ export class Payment {
       description: this.description
     }).subscribe({
       next: () => {
-        this.successMessage = 'Payment processed successfully';
+        this.notify.success('Payment processed successfully');
         this.loading = false;
       },
       error: () => {
-        this.errorMessage = 'Payment failed';
+        this.errorMessage = 'Payment failed. Check account IDs and balance.';
         this.loading = false;
       }
     });

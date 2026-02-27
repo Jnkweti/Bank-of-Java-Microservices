@@ -36,6 +36,19 @@ body {
   margin: 0;
   height: 100%;
 }
+/* Snackbar styles */
+.snackbar-success {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
+}
+
+.snackbar-error {
+  --mdc-snackbar-container-color: #d32f2f;
+  --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
+}
+
 /* Spinner inside buttons */
 button mat-spinner {
   display: inline-block;
