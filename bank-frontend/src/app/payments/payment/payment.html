@@ -55,7 +55,13 @@
           <p class="error">{{ errorMessage }}</p>
         }
 
-        <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()" [disabled]="paymentForm.invalid">Send Payment</button>
+        <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()" [disabled]="paymentForm.invalid || loading">
+          @if (loading) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Send Payment
+          }
+        </button>
       </form>
     </mat-card-content>
   </mat-card>

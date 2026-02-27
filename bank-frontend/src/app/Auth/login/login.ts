@@ -6,10 +6,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [FormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -17,17 +18,24 @@ export class Login {
   email = '';
   password = '';
   errorMessage = '';
+  loading = false;
 
   constructor(private router: Router, private authService: AuthService) {}
 
   onLogin() {
+    this.loading = true;
+    this.errorMessage = '';
+
     this.authService.login(this.email, this.password)
       .subscribe({
         next: (res) => {
           localStorage.setItem('token', res.accessToken);
           this.router.navigate(['/dashboard']);
         },
-        error: (err) => { this.errorMessage = 'Invalid login credentials'; }
+        error: () => {
+          this.errorMessage = 'Invalid login credentials';
+          this.loading = false;
+        }
       });
   }
 }

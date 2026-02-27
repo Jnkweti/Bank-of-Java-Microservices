@@ -6,16 +6,18 @@ import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, MatCardModule, MatButtonModule, MatIconModule],
+  imports: [RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
   accounts: any[] = [];
+  loading = true;
 
   constructor(
     private accountService: Account,
@@ -33,9 +35,14 @@ export class Dashboard implements OnInit {
     ).subscribe({
       next: (accounts: any) => {
         this.accounts = accounts;
+        this.loading = false;
         this.cdr.detectChanges();
       },
-      error: (err: any) => { console.log('Failed to load accounts', err); }
+      error: (err: any) => {
+        console.log('Failed to load accounts', err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 }

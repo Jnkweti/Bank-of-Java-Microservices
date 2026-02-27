@@ -9,10 +9,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-create-account',
-  imports: [FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule],
+  imports: [FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSelectModule, MatProgressSpinnerModule],
   templateUrl: './create-account.html',
   styleUrl: './create-account.scss',
 })
@@ -20,6 +21,7 @@ export class CreateAccount {
   accName = '';
   type = 'CHECKING';
   errorMessage = '';
+  loading = false;
 
   constructor(
     private accountService: Account,
@@ -30,6 +32,7 @@ export class CreateAccount {
 
   onSubmit() {
     this.errorMessage = '';
+    this.loading = true;
 
     const email = this.authService.getEmailFromToken();
     if (!email) return;
@@ -44,10 +47,16 @@ export class CreateAccount {
           balance: '0.00'
         }).subscribe({
           next: () => { this.router.navigate(['/dashboard']); },
-          error: () => { this.errorMessage = 'Failed to create account. Please try again.'; }
+          error: () => {
+            this.errorMessage = 'Failed to create account. Please try again.';
+            this.loading = false;
+          }
         });
       },
-      error: () => { this.errorMessage = 'Could not find your customer profile.'; }
+      error: () => {
+        this.errorMessage = 'Could not find your customer profile.';
+        this.loading = false;
+      }
     });
   }
 }

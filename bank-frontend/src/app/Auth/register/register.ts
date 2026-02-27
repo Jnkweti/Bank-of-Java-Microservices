@@ -7,10 +7,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-register',
-  imports: [FormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [FormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
@@ -22,6 +23,7 @@ export class Register {
   address = '';
   birthDate = '';
   errorMessage = '';
+  loading = false;
 
   constructor(
     private authService: AuthService,
@@ -31,6 +33,7 @@ export class Register {
 
   onRegister() {
     this.errorMessage = '';
+    this.loading = true;
 
     this.authService.register(this.email, this.password).subscribe({
       next: (res: any) => {
@@ -43,10 +46,16 @@ export class Register {
           birthDate: this.birthDate
         }).subscribe({
           next: () => { this.router.navigate(['/dashboard']); },
-          error: () => { this.errorMessage = 'Account created but customer profile failed. Contact support.'; }
+          error: () => {
+            this.errorMessage = 'Account created but customer profile failed. Contact support.';
+            this.loading = false;
+          }
         });
       },
-      error: () => { this.errorMessage = 'Registration failed. Email may already be in use.'; }
+      error: () => {
+        this.errorMessage = 'Registration failed. Email may already be in use.';
+        this.loading = false;
+      }
     });
   }
 }

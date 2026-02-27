@@ -36,4 +36,12 @@ body {
   margin: 0;
   height: 100%;
 }
-/* You can add global styles to this file, and also import other style files */
+/* Spinner inside buttons */
+button mat-spinner {
+  display: inline-block;
+  margin: 0 auto;
+
+  circle {
+    stroke: white;
+  }
+}
