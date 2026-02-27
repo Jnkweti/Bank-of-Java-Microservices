@@ -1,0 +1,28 @@
+.not-found-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+
+  .not-found-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    color: #999;
+  }
+
+  h1 {
+    font-size: 72px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 16px 0 0;
+  }
+
+  p {
+    font-size: 18px;
+    color: #666;
+    margin: 8px 0 32px;
+  }
+}
