@@ -28,7 +28,10 @@ export class Dashboard implements OnInit {
 
   ngOnInit() {
     const email = this.authService.getEmailFromToken();
-    if (!email) return;
+    if (!email) {
+      this.loading = false;
+      return;
+    }
 
     this.customerService.getCustomerByEmail(email).pipe(
       switchMap((customer: any) => this.accountService.getAccountsByCustomerId(customer.id))

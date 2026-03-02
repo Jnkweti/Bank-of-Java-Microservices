@@ -4,11 +4,12 @@
   <span style="flex: 1 1 auto;"></span>
 
   @if (isLoggedIn()) {
-    <a routerLink="/dashboard" mat-button>Dashboard</a>
-    <a routerLink="/payment" mat-button>Payment</a>
+    <a routerLink="/dashboard" routerLinkActive="active-link" mat-button>Dashboard</a>
+    <a routerLink="/payment" routerLinkActive="active-link" mat-button>Payment</a>
+    <a routerLink="/profile" routerLinkActive="active-link" mat-button>Profile</a>
     <button mat-button (click)="logout()">Logout</button>
   } @else {
-    <a routerLink="/login" mat-button>Login</a>
-    <a routerLink="/register" mat-button>Register</a>
+    <a routerLink="/login" routerLinkActive="active-link" mat-button>Login</a>
+    <a routerLink="/register" routerLinkActive="active-link" mat-button>Register</a>
   }
 </mat-toolbar>

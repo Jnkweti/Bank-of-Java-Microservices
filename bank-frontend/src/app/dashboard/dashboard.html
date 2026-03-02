@@ -37,8 +37,8 @@
           </mat-card-content>
 
           <mat-card-actions>
-            <button mat-button color="primary">View Details</button>
-            <button mat-button color="primary">Transfer</button>
+            <a mat-button color="primary" [routerLink]="'/account/' + account.id">View Details</a>
+            <a mat-button color="primary" routerLink="/payment">Transfer</a>
           </mat-card-actions>
         </mat-card>
       }

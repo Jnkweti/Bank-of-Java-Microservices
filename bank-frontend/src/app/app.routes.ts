@@ -6,6 +6,8 @@ import{ Dashboard} from "./dashboard/dashboard";
 import {authGuard} from './shared/auth-guard';
 import { Payment } from './payments/payment/payment';
 import { CreateAccount } from './accounts/create-account/create-account';
+import { AccountDetail } from './accounts/account-detail/account-detail';
+import { Profile } from './customers/profile/profile';
 import { NotFound } from './shared/not-found/not-found';
 
 export const routes: Routes = [
@@ -15,5 +17,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'payment', component: Payment, canActivate: [authGuard] },
   { path: 'create-account', component: CreateAccount, canActivate: [authGuard] },
+  { path: 'account/:id', component: AccountDetail, canActivate: [authGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: '**', component: NotFound },
 ];
