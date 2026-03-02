@@ -1,0 +1,101 @@
+@if (loading) {
+  <div class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+} @else if (!account) {
+  <div class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <p>Account not found</p>
+    <a mat-raised-button color="primary" routerLink="/dashboard">Back to Dashboard</a>
+  </div>
+} @else {
+  <div class="detail-container">
+    <div class="detail-header">
+      <a mat-button routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon> Back
+      </a>
+    </div>
+
+    <mat-card class="account-info-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="account-icon">
+          @if (account.type === 'SAVINGS') { savings } @else { account_balance }
+        </mat-icon>
+        <mat-card-title>{{ account.accName }}</mat-card-title>
+        <mat-card-subtitle>{{ account.type }} &bull; {{ account.accountNumber }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="balance-section">
+          <span class="balance-label">Available Balance</span>
+          <span class="balance-amount">${{ account.balance }}</span>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Status</span>
+            <span class="value status" [class.active]="account.status === 'ACTIVE'">{{ account.status }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Opened</span>
+            <span class="value">{{ account.openedDate | date:'mediumDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Interest Rate</span>
+            <span class="value">{{ account.interestRate }}%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Last Updated</span>
+            <span class="value">{{ account.lastUpdated | date:'medium' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <a mat-raised-button color="primary" routerLink="/payment">
+          <mat-icon>send</mat-icon> Send Payment
+        </a>
+      </mat-card-actions>
+    </mat-card>
+
+    <h2 class="section-title">Transaction History</h2>
+
+    @if (payments.length === 0) {
+      <div class="empty-state">
+        <mat-icon>receipt_long</mat-icon>
+        <p>No transactions yet</p>
+      </div>
+    } @else {
+      <div class="transactions-list">
+        @for (payment of payments; track payment.id) {
+          <mat-card class="transaction-card">
+            <div class="transaction-row">
+              <div class="transaction-icon">
+                @if (payment.fromAccountId === account.id) {
+                  <mat-icon class="outgoing">arrow_upward</mat-icon>
+                } @else {
+                  <mat-icon class="incoming">arrow_downward</mat-icon>
+                }
+              </div>
+              <div class="transaction-info">
+                <span class="transaction-type">{{ payment.type }}</span>
+                <span class="transaction-desc">{{ payment.description || 'No description' }}</span>
+              </div>
+              <div class="transaction-amount" [class.outgoing]="payment.fromAccountId === account.id" [class.incoming]="payment.fromAccountId !== account.id">
+                @if (payment.fromAccountId === account.id) {
+                  -${{ payment.amount }}
+                } @else {
+                  +${{ payment.amount }}
+                }
+              </div>
+              <div class="transaction-meta">
+                <span class="transaction-status" [class]="payment.status?.toLowerCase()">{{ payment.status }}</span>
+                <span class="transaction-date">{{ payment.createdAt | date:'short' }}</span>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+    }
+  </div>
+}
