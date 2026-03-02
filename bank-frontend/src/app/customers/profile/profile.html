@@ -1,0 +1,88 @@
+@if (loading) {
+  <div class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+} @else if (!customer) {
+  <div class="error-state">
+    <mat-icon>person_off</mat-icon>
+    <p>Could not load profile</p>
+  </div>
+} @else {
+  <div class="profile-container">
+    <h1>My Profile</h1>
+
+    <mat-card class="profile-card">
+      @if (!editing) {
+        <mat-card-content>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <span class="label">First Name</span>
+              <span class="value">{{ customer.firstName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="label">Last Name</span>
+              <span class="value">{{ customer.lastName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="label">Email</span>
+              <span class="value">{{ customer.email }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="label">Address</span>
+              <span class="value">{{ customer.address || 'Not set' }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="label">Date of Birth</span>
+              <span class="value">{{ customer.birthDate | date:'mediumDate' }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="label">Member Since</span>
+              <span class="value">{{ customer.registerDate | date:'mediumDate' }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="startEditing()">
+            <mat-icon>edit</mat-icon> Edit Profile
+          </button>
+        </mat-card-actions>
+      } @else {
+        <mat-card-content>
+          <form #profileForm="ngForm" class="edit-form">
+            <mat-form-field appearance="outline">
+              <mat-label>First Name</mat-label>
+              <input matInput [(ngModel)]="editForm.firstName" name="firstName" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Last Name</mat-label>
+              <input matInput [(ngModel)]="editForm.lastName" name="lastName" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput [value]="customer.email" disabled>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Address</mat-label>
+              <input matInput [(ngModel)]="editForm.address" name="address">
+            </mat-form-field>
+          </form>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="saveProfile()" [disabled]="profileForm.invalid || saving">
+            @if (saving) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Save
+            }
+          </button>
+          <button mat-button (click)="cancelEditing()">Cancel</button>
+        </mat-card-actions>
+      }
+    </mat-card>
+  </div>
+}
