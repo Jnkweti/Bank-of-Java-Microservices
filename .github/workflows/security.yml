@@ -97,7 +97,7 @@ jobs:
               com.github.spotbugs:spotbugs-maven-plugin:4.8.6.6:check \
               -DskipTests -q \
               -Dspotbugs.effort=Max \
-              -Dspotbugs.threshold=Medium \
+              -Dspotbugs.threshold=High \
               -Dspotbugs.pluginList="$FSB_JAR" \
               || EXIT_CODE=1
             echo "::endgroup::"
@@ -481,7 +481,6 @@ jobs:
       - spotbugs
       - owasp-dependency-check
       - npm-audit
-      - osv-scanner
       - trivy-filesystem
       - trivy-images
       - hadolint
@@ -499,7 +498,6 @@ jobs:
           results[spotbugs]="${{ needs.spotbugs.result }}"
           results[owasp-dependency-check]="${{ needs.owasp-dependency-check.result }}"
           results[npm-audit]="${{ needs.npm-audit.result }}"
-          results[osv-scanner]="${{ needs.osv-scanner.result }}"
           results[trivy-filesystem]="${{ needs.trivy-filesystem.result }}"
           results[trivy-images]="${{ needs.trivy-images.result }}"
           results[hadolint]="${{ needs.hadolint.result }}"

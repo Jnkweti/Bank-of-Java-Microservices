@@ -15,7 +15,11 @@ COPY payment-service/ ./payment-service/
 RUN --mount=type=cache,target=/root/.m2 mvn -f payment-service/pom.xml package -DskipTests
 
 FROM eclipse-temurin:21-jre
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 COPY --from=builder /app/payment-service/target/*.jar app.jar
+USER appuser
 EXPOSE 3003
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:3003/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]
