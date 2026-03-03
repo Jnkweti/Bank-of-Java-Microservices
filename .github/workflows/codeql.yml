@@ -1,0 +1,87 @@
+# ──────────────────────────────────────────────────────────────
+# CodeQL SAST — Static Application Security Testing
+# ──────────────────────────────────────────────────────────────
+# Deeply analyses Java and TypeScript source for:
+#   • SQL / NoSQL injection          • XSS (cross-site scripting)
+#   • Path traversal                 • Insecure deserialization
+#   • Hard-coded credentials         • Broken authentication patterns
+#   • Unsafe reflection              • SSRF
+#
+# Results surface in the GitHub Security → Code Scanning tab
+# and as inline PR annotations.
+# ──────────────────────────────────────────────────────────────
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Deep analysis every Monday 3 AM UTC (off-peak)
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write   # required for SARIF upload
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual       # Java needs compilation for accurate analysis
+          - language: javascript-typescript
+            build-mode: none         # JS/TS is interpreted — no build needed
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # Use extended query suite for deeper analysis
+          queries: security-extended
+
+      # ── Java build (only for java-kotlin matrix entry) ──
+      - name: Set up JDK 21
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build proto-config (shared dependency)
+        if: matrix.language == 'java-kotlin'
+        run: mvn -f proto-config/pom.xml install -DskipTests -q
+
+      - name: Compile all services
+        if: matrix.language == 'java-kotlin'
+        run: |
+          for service in customer-service account-service payment-service \
+                         notification-service analytics-service auth-service \
+                         api-gateway; do
+            echo "::group::Building $service"
+            mvn -f "$service/pom.xml" compile -DskipTests -q
+            echo "::endgroup::"
+          done
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

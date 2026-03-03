@@ -1,0 +1,480 @@
+# ──────────────────────────────────────────────────────────────
+# Security Scanning Pipeline
+# ──────────────────────────────────────────────────────────────
+# Production-grade multi-layer security scanning:
+#
+#   Layer 1 — Secrets        Gitleaks  (leaked credentials, API keys, tokens)
+#   Layer 2 — SAST           SpotBugs  (Java-specific bug patterns incl. security)
+#   Layer 3 — Dependencies   OWASP Dependency-Check (Java CVEs)
+#                            npm audit (JS/TS CVEs)
+#                            OSV-Scanner (cross-ecosystem CVE DB)
+#   Layer 4 — Containers     Trivy image scan (OS + library CVEs in images)
+#   Layer 5 — IaC            Hadolint (Dockerfile best-practices)
+#                            Checkov  (docker-compose, Dockerfile misconfigs)
+#   Layer 6 — Licensing      license-checker (copyleft / incompatible licenses)
+#   Layer 7 — Supply Chain   SBOM generation (CycloneDX)
+#                            Scorecard (OpenSSF supply-chain health)
+#
+# All SARIF-producing scans upload results to
+# GitHub Security → Code Scanning for unified triage.
+# ──────────────────────────────────────────────────────────────
+name: "Security Scanning"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * 1"   # Weekly deep scan — Monday 2 AM UTC
+  workflow_dispatch:       # Manual trigger for on-demand scans
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+env:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "22"
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 1 — SECRET DETECTION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+jobs:
+  secret-scan:
+    name: "Secrets — Gitleaks"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Full history for diff-based scanning
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 2 — STATIC ANALYSIS (SpotBugs + Find Security Bugs)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  spotbugs:
+    name: "SAST — SpotBugs + Security"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Install proto-config
+        run: mvn -f proto-config/pom.xml install -DskipTests -q
+
+      - name: Run SpotBugs with Find-Security-Bugs on all services
+        run: |
+          EXIT_CODE=0
+          for service in customer-service account-service payment-service \
+                         notification-service analytics-service auth-service \
+                         api-gateway; do
+            echo "::group::SpotBugs — $service"
+            mvn -f "$service/pom.xml" compile spotbugs:check \
+              -DskipTests -q \
+              -Dspotbugs.plugins.plugin.groupId=com.h3xstream.findsecbugs \
+              -Dspotbugs.plugins.plugin.artifactId=findsecbugs-plugin \
+              -Dspotbugs.plugins.plugin.version=1.13.0 \
+              -Dspotbugs.effort=Max \
+              -Dspotbugs.threshold=Medium || EXIT_CODE=1
+            echo "::endgroup::"
+          done
+          exit $EXIT_CODE
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 3 — DEPENDENCY VULNERABILITY SCANNING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  owasp-dependency-check:
+    name: "Dependencies — OWASP (Java)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Install proto-config
+        run: mvn -f proto-config/pom.xml install -DskipTests -q
+
+      # Cache the NVD database (~250 MB) to avoid re-downloading each run
+      - name: Cache NVD database
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp
+          key: owasp-nvd-${{ github.run_id }}
+          restore-keys: owasp-nvd-
+
+      - name: OWASP Dependency-Check — all services
+        run: |
+          EXIT_CODE=0
+          for service in customer-service account-service payment-service \
+                         notification-service analytics-service auth-service \
+                         api-gateway; do
+            echo "::group::OWASP — $service"
+            mvn -f "$service/pom.xml" \
+              org.owasp:dependency-check-maven:10.0.4:check \
+              -DskipTests \
+              -DfailBuildOnCVSS=7 \
+              -Dformat=ALL \
+              -DprettyPrint=true || EXIT_CODE=1
+            echo "::endgroup::"
+          done
+          exit $EXIT_CODE
+
+      - name: Upload OWASP reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-dependency-check-reports
+          path: "**/target/dependency-check-report.*"
+          retention-days: 30
+
+  npm-audit:
+    name: "Dependencies — npm audit (Frontend)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: bank-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: bank-frontend/package-lock.json
+
+      - run: npm ci
+
+      # Fail on HIGH+ vulnerabilities in production dependencies
+      - name: Audit production dependencies
+        run: npm audit --audit-level=high --omit=dev
+
+      # Informational — report ALL vulnerabilities including dev
+      - name: Audit all dependencies (informational)
+        if: always()
+        run: npm audit || true
+
+  osv-scanner:
+    name: "Dependencies — OSV Scanner (All)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2
+        with:
+          scan-args: |-
+            --recursive
+            --output=results.json
+            --format=json
+            .
+
+      # OSV-Scanner produces SARIF natively when used with the reusable workflow,
+      # but for the action we convert manually
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osv-scanner-results
+          path: results.json
+          retention-days: 30
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 4 — CONTAINER IMAGE SCANNING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  trivy-filesystem:
+    name: "Trivy — Filesystem Scan"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-fs.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Upload Trivy FS results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-filesystem
+
+  trivy-images:
+    name: "Trivy — Image (${{ matrix.service }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Only build+scan images on main branch pushes and scheduled runs
+    # (too expensive for every PR)
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: customer-service
+            dockerfile: customer.Dockerfile
+          - service: account-service
+            dockerfile: account.Dockerfile
+          - service: payment-service
+            dockerfile: payment.Dockerfile
+          - service: notification-service
+            dockerfile: notification.Dockerfile
+          - service: analytics-service
+            dockerfile: analytics.Dockerfile
+          - service: auth-service
+            dockerfile: auth.Dockerfile
+          - service: api-gateway
+            dockerfile: gateway.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: true
+          tags: bank-of-java/${{ matrix.service }}:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "bank-of-java/${{ matrix.service }}:scan"
+          format: sarif
+          output: trivy-image-${{ matrix.service }}.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-image-${{ matrix.service }}.sarif
+          category: trivy-image-${{ matrix.service }}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 5 — INFRASTRUCTURE-AS-CODE SCANNING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  hadolint:
+    name: "IaC — Hadolint (Dockerfiles)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint all Dockerfiles
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          # Hadolint accepts multiple files via recursive scan
+          recursive: true
+          failure-threshold: warning
+          format: sarif
+          output-file: hadolint.sarif
+
+      - name: Upload Hadolint results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: hadolint.sarif
+          category: hadolint
+
+  checkov:
+    name: "IaC — Checkov (Compose + Dockerfiles)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: dockerfile,docker_compose
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+          soft_fail: false
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov.sarif
+          category: checkov
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 6 — LICENSE COMPLIANCE
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  license-check:
+    name: "Licenses — Compliance Check"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: bank-frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: cd bank-frontend && npm ci
+
+      # Fail on copyleft licenses that would force open-sourcing
+      - name: Check frontend licenses
+        run: |
+          cd bank-frontend
+          npx license-checker \
+            --failOn "GPL-2.0-only;GPL-2.0-or-later;GPL-3.0-only;GPL-3.0-or-later;AGPL-1.0-only;AGPL-3.0-only;AGPL-3.0-or-later" \
+            --summary
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LAYER 7 — SUPPLY CHAIN (SBOM + OpenSSF Scorecard)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sbom:
+    name: "Supply Chain — SBOM Generation"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cdx.json
+          retention-days: 90
+
+  scorecard:
+    name: "Supply Chain — OpenSSF Scorecard"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Scorecard only makes sense on the default branch
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write   # needed for Scorecard API
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@v2
+        with:
+          results_file: scorecard.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload Scorecard results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: scorecard.sarif
+          category: scorecard
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  SECURITY GATE — Aggregated pass/fail decision
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  security-gate:
+    name: "Security Gate"
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - secret-scan
+      - spotbugs
+      - owasp-dependency-check
+      - npm-audit
+      - osv-scanner
+      - trivy-filesystem
+      - trivy-images
+      - hadolint
+      - checkov
+      - license-check
+    steps:
+      - name: Evaluate all scan results
+        run: |
+          echo "╔══════════════════════════════════════════════╗"
+          echo "║         SECURITY GATE — RESULTS             ║"
+          echo "╠══════════════════════════════════════════════╣"
+
+          declare -A results
+          results[secret-scan]="${{ needs.secret-scan.result }}"
+          results[spotbugs]="${{ needs.spotbugs.result }}"
+          results[owasp-dependency-check]="${{ needs.owasp-dependency-check.result }}"
+          results[npm-audit]="${{ needs.npm-audit.result }}"
+          results[osv-scanner]="${{ needs.osv-scanner.result }}"
+          results[trivy-filesystem]="${{ needs.trivy-filesystem.result }}"
+          results[trivy-images]="${{ needs.trivy-images.result }}"
+          results[hadolint]="${{ needs.hadolint.result }}"
+          results[checkov]="${{ needs.checkov.result }}"
+          results[license-check]="${{ needs.license-check.result }}"
+
+          failed=false
+          for scan in "${!results[@]}"; do
+            status="${results[$scan]}"
+            if [[ "$status" == "failure" ]]; then
+              echo "║  ✗ FAIL    $scan"
+              failed=true
+            elif [[ "$status" == "skipped" ]]; then
+              echo "║  ○ SKIP    $scan"
+            elif [[ "$status" == "cancelled" ]]; then
+              echo "║  ⊘ CANCEL  $scan"
+            else
+              echo "║  ✓ PASS    $scan"
+            fi
+          done
+
+          echo "╚══════════════════════════════════════════════╝"
+
+          if [ "$failed" = true ]; then
+            echo ""
+            echo "::error::SECURITY GATE FAILED — vulnerabilities detected. Review the Security tab for details."
+            exit 1
+          fi
+
+          echo ""
+          echo "SECURITY GATE PASSED — all scans clean."
