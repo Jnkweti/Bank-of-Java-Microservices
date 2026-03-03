@@ -79,8 +79,15 @@ jobs:
       - name: Install proto-config
         run: mvn -f proto-config/pom.xml install -DskipTests -q
 
+      - name: Download FindSecBugs plugin JAR
+        run: |
+          mvn dependency:copy \
+            -Dartifact=com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0 \
+            -DoutputDirectory=/tmp/spotbugs-plugins -q
+
       - name: Run SpotBugs with Find-Security-Bugs on all services
         run: |
+          FSB_JAR=/tmp/spotbugs-plugins/findsecbugs-plugin-1.13.0.jar
           EXIT_CODE=0
           for service in customer-service account-service payment-service \
                          notification-service analytics-service auth-service \
@@ -91,7 +98,7 @@ jobs:
               -DskipTests -q \
               -Dspotbugs.effort=Max \
               -Dspotbugs.threshold=Medium \
-              -Dspotbugs.pluginList=com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0 \
+              -Dspotbugs.pluginList="$FSB_JAR" \
               || EXIT_CODE=1
             echo "::endgroup::"
           done
@@ -184,7 +191,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.3
         with:
           scan-args: |-
             --recursive
@@ -323,13 +330,20 @@ jobs:
 
       - name: Lint all Dockerfiles
         id: hadolint
-        uses: hadolint/hadolint-action@v3.1.0
         continue-on-error: true
-        with:
-          recursive: true
-          failure-threshold: warning
-          format: sarif
-          output-file: hadolint.sarif
+        run: |
+          # hadolint-action expects files named "Dockerfile", but ours are *.Dockerfile
+          curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -o /tmp/hadolint
+          chmod +x /tmp/hadolint
+          /tmp/hadolint -f sarif \
+            customer.Dockerfile \
+            account.Dockerfile \
+            payment.Dockerfile \
+            notification.Dockerfile \
+            analytics.Dockerfile \
+            auth.Dockerfile \
+            gateway.Dockerfile \
+            > hadolint.sarif
 
       - name: Upload Hadolint results
         uses: github/codeql-action/upload-sarif@v4
@@ -357,7 +371,7 @@ jobs:
         continue-on-error: true
         with:
           directory: .
-          framework: dockerfile,docker_compose
+          framework: dockerfile
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
           soft_fail: false
