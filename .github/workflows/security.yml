@@ -86,13 +86,13 @@ jobs:
                          notification-service analytics-service auth-service \
                          api-gateway; do
             echo "::group::SpotBugs — $service"
-            mvn -f "$service/pom.xml" compile spotbugs:check \
+            mvn -f "$service/pom.xml" compile \
+              com.github.spotbugs:spotbugs-maven-plugin:4.8.6.6:check \
               -DskipTests -q \
-              -Dspotbugs.plugins.plugin.groupId=com.h3xstream.findsecbugs \
-              -Dspotbugs.plugins.plugin.artifactId=findsecbugs-plugin \
-              -Dspotbugs.plugins.plugin.version=1.13.0 \
               -Dspotbugs.effort=Max \
-              -Dspotbugs.threshold=Medium || EXIT_CODE=1
+              -Dspotbugs.threshold=Medium \
+              -Dspotbugs.pluginList=com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0 \
+              || EXIT_CODE=1
             echo "::endgroup::"
           done
           exit $EXIT_CODE
