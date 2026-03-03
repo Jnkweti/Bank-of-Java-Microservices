@@ -20,7 +20,7 @@ export class Payment {
   toAccountId = '';
   amount = '';
   description = '';
-  type = 'TRANSFER';
+  type: 'TRANSFER' | 'DEPOSIT' | 'WITHDRAWAL' = 'TRANSFER';
   errorMessage = '';
   loading = false;
 

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient} from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { CustomerModel, CustomerIdResponse } from '../shared/models';
 
 @Injectable({
   providedIn: 'root',
@@ -11,19 +12,19 @@ export class Customer {
 
   constructor(private http: HttpClient) { }
 
-  getCustomerById(id: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${id}`);
+  getCustomerById(id: string): Observable<CustomerModel> {
+    return this.http.get<CustomerModel>(`${this.apiUrl}/${id}`);
   }
 
-  getCustomerByEmail(email: string) {
-    return this.http.get(`${this.apiUrl}/email/${email}`);
+  getCustomerByEmail(email: string): Observable<CustomerIdResponse> {
+    return this.http.get<CustomerIdResponse>(`${this.apiUrl}/email/${email}`);
   }
 
-  createCustomer(customer: any): Observable<any> {
-    return this.http.post(this.apiUrl, customer);
+  createCustomer(customer: Partial<CustomerModel>): Observable<CustomerModel> {
+    return this.http.post<CustomerModel>(this.apiUrl, customer);
   }
 
-  updateCustomer(id: string, customer: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, customer);
+  updateCustomer(id: string, customer: Partial<CustomerModel>): Observable<CustomerModel> {
+    return this.http.put<CustomerModel>(`${this.apiUrl}/${id}`, customer);
   }
 }

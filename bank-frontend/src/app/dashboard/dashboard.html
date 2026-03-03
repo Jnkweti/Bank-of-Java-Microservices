@@ -29,7 +29,7 @@
           <mat-card-content>
             <div class="balance">
               <span class="balance-label">Available Balance</span>
-              <span class="balance-amount">${{ account.balance }}</span>
+              <span class="balance-amount">{{ account.balance | currency:'USD' }}</span>
             </div>
             <div class="account-details">
               <span class="status" [class.active]="account.status === 'ACTIVE'">{{ account.status }}</span>

@@ -6,7 +6,7 @@
     </div>
 
     <mat-card-content>
-      <form #registerForm="ngForm">
+      <form #registerForm="ngForm" (ngSubmit)="onRegister()">
         <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>First Name</mat-label>
@@ -63,7 +63,7 @@
           <p class="error">{{ errorMessage }}</p>
         }
 
-        <button mat-raised-button color="primary" class="register-btn" (click)="onRegister()" [disabled]="registerForm.invalid || loading">
+        <button mat-raised-button color="primary" class="register-btn" type="submit" [disabled]="registerForm.invalid || loading">
           @if (loading) {
             <mat-spinner diameter="20"></mat-spinner>
           } @else {

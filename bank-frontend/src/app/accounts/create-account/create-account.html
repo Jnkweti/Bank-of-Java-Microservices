@@ -6,7 +6,7 @@
     </div>
 
     <mat-card-content>
-      <form #createForm="ngForm">
+      <form #createForm="ngForm" (ngSubmit)="onSubmit()">
         <mat-form-field appearance="outline">
           <mat-label>Account Name</mat-label>
           <input matInput [(ngModel)]="accName" name="accName" required #accNameRef="ngModel" placeholder="e.g. My Checking">
@@ -27,7 +27,7 @@
           <p class="error">{{ errorMessage }}</p>
         }
 
-        <button mat-raised-button color="primary" class="submit-btn" (click)="onSubmit()" [disabled]="createForm.invalid || loading">
+        <button mat-raised-button color="primary" class="submit-btn" type="submit" [disabled]="createForm.invalid || loading">
           @if (loading) {
             <mat-spinner diameter="20"></mat-spinner>
           } @else {

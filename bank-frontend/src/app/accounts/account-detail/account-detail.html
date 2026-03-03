@@ -28,7 +28,7 @@
       <mat-card-content>
         <div class="balance-section">
           <span class="balance-label">Available Balance</span>
-          <span class="balance-amount">${{ account.balance }}</span>
+          <span class="balance-amount">{{ account.balance | currency:'USD' }}</span>
         </div>
 
         <div class="info-grid">
@@ -83,13 +83,13 @@
               </div>
               <div class="transaction-amount" [class.outgoing]="payment.fromAccountId === account.id" [class.incoming]="payment.fromAccountId !== account.id">
                 @if (payment.fromAccountId === account.id) {
-                  -${{ payment.amount }}
+                  -{{ payment.amount | currency:'USD' }}
                 } @else {
-                  +${{ payment.amount }}
+                  +{{ payment.amount | currency:'USD' }}
                 }
               </div>
               <div class="transaction-meta">
-                <span class="transaction-status" [class]="payment.status?.toLowerCase()">{{ payment.status }}</span>
+                <span class="transaction-status" [class]="payment.status.toLowerCase()">{{ payment.status }}</span>
                 <span class="transaction-date">{{ payment.createdAt | date:'short' }}</span>
               </div>
             </div>

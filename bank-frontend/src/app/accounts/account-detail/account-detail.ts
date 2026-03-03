@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -7,7 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Account } from '../account';
 import { PaymentService } from '../../payments/PaymentService';
-import { forkJoin, catchError, of } from 'rxjs';
+import { forkJoin, catchError, of, Subscription } from 'rxjs';
+import { AccountModel, PaymentModel } from '../../shared/models';
 
 @Component({
   selector: 'app-account-detail',
@@ -15,10 +16,11 @@ import { forkJoin, catchError, of } from 'rxjs';
   templateUrl: './account-detail.html',
   styleUrl: './account-detail.scss',
 })
-export class AccountDetail implements OnInit {
-  account: any = null;
-  payments: any[] = [];
+export class AccountDetail implements OnInit, OnDestroy {
+  account: AccountModel | null = null;
+  payments: PaymentModel[] = [];
   loading = true;
+  private sub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -34,10 +36,10 @@ export class AccountDetail implements OnInit {
       return;
     }
 
-    forkJoin({
+    this.sub = forkJoin({
       account: this.accountService.getAccountById(id),
       payments: this.paymentService.getPaymentsByAccount(id).pipe(
-        catchError(() => of([]))
+        catchError(() => of([] as PaymentModel[]))
       ),
     }).subscribe({
       next: (result) => {
@@ -51,5 +53,9 @@ export class AccountDetail implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
   }
 }

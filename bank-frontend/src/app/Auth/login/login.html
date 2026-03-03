@@ -6,7 +6,7 @@
     </div>
 
     <mat-card-content>
-      <form #loginForm="ngForm">
+      <form #loginForm="ngForm" (ngSubmit)="onLogin()">
         <mat-form-field appearance="outline">
           <mat-label>Email Address</mat-label>
           <input matInput [(ngModel)]="email" name="email" type="email" required email #emailRef="ngModel" placeholder="you@example.com">
@@ -27,7 +27,7 @@
           <p class="error">{{ errorMessage }}</p>
         }
 
-        <button mat-raised-button color="primary" class="login-btn" (click)="onLogin()" [disabled]="loginForm.invalid || loading">
+        <button mat-raised-button color="primary" class="login-btn" type="submit" [disabled]="loginForm.invalid || loading">
           @if (loading) {
             <mat-spinner diameter="20"></mat-spinner>
           } @else {

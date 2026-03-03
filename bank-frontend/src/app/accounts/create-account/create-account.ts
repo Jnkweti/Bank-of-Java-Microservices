@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-create-account',
@@ -35,26 +36,23 @@ export class CreateAccount {
     this.loading = true;
 
     const email = this.authService.getEmailFromToken();
-    if (!email) return;
+    if (!email) {
+      this.loading = false;
+      return;
+    }
 
-    this.customerService.getCustomerByEmail(email).subscribe({
-      next: (customer: any) => {
-        this.accountService.createAccount({
-          accName: this.accName,
-          customerId: customer.id,
-          type: this.type,
-          status: 'ACTIVE',
-          balance: '0.00'
-        }).subscribe({
-          next: () => { this.router.navigate(['/dashboard']); },
-          error: () => {
-            this.errorMessage = 'Failed to create account. Please try again.';
-            this.loading = false;
-          }
-        });
-      },
+    this.customerService.getCustomerByEmail(email).pipe(
+      switchMap(customer => this.accountService.createAccount({
+        accName: this.accName,
+        customerId: customer.id,
+        type: this.type as 'CHECKING' | 'SAVINGS',
+        status: 'ACTIVE',
+        balance: '0.00'
+      }))
+    ).subscribe({
+      next: () => { this.router.navigate(['/dashboard']); },
       error: () => {
-        this.errorMessage = 'Could not find your customer profile.';
+        this.errorMessage = 'Failed to create account. Please try again.';
         this.loading = false;
       }
     });

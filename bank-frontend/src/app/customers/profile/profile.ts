@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Customer } from '../customer';
 import { AuthService } from '../../Auth/auth.service';
 import { NotificationService } from '../../shared/notification.service';
-import { switchMap } from 'rxjs';
+import { switchMap, Subscription } from 'rxjs';
+import { CustomerModel } from '../../shared/models';
 
 @Component({
   selector: 'app-profile',
@@ -18,11 +19,12 @@ import { switchMap } from 'rxjs';
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
-export class Profile implements OnInit {
-  customer: any = null;
+export class Profile implements OnInit, OnDestroy {
+  customer: CustomerModel | null = null;
   loading = true;
   saving = false;
   editing = false;
+  private sub?: Subscription;
 
   editForm = {
     firstName: '',
@@ -44,10 +46,10 @@ export class Profile implements OnInit {
       return;
     }
 
-    this.customerService.getCustomerByEmail(email).pipe(
-      switchMap((res: any) => this.customerService.getCustomerById(res.id))
+    this.sub = this.customerService.getCustomerByEmail(email).pipe(
+      switchMap(res => this.customerService.getCustomerById(res.id))
     ).subscribe({
-      next: (customer: any) => {
+      next: (customer) => {
         this.customer = customer;
         this.loading = false;
         this.cdr.detectChanges();
@@ -59,7 +61,12 @@ export class Profile implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
+  }
+
   startEditing() {
+    if (!this.customer) return;
     this.editForm.firstName = this.customer.firstName;
     this.editForm.lastName = this.customer.lastName;
     this.editForm.address = this.customer.address;
@@ -71,6 +78,7 @@ export class Profile implements OnInit {
   }
 
   saveProfile() {
+    if (!this.customer) return;
     this.saving = true;
     this.customerService.updateCustomer(this.customer.id, {
       firstName: this.editForm.firstName,
@@ -79,7 +87,7 @@ export class Profile implements OnInit {
       address: this.editForm.address,
       birthDate: this.customer.birthDate,
     }).subscribe({
-      next: (updated: any) => {
+      next: (updated) => {
         this.customer = updated;
         this.editing = false;
         this.saving = false;

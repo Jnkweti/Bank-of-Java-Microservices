@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -35,25 +36,25 @@ export class Register {
     this.errorMessage = '';
     this.loading = true;
 
-    this.authService.register(this.email, this.password).subscribe({
-      next: (res: any) => {
+    this.authService.register(this.email, this.password).pipe(
+      switchMap(res => {
         localStorage.setItem('token', res.accessToken);
-        this.customerService.createCustomer({
+        return this.customerService.createCustomer({
           firstName: this.firstName,
           lastName: this.lastName,
           address: this.address,
           email: this.email,
           birthDate: this.birthDate
-        }).subscribe({
-          next: () => { this.router.navigate(['/dashboard']); },
-          error: () => {
-            this.errorMessage = 'Account created but customer profile failed. Contact support.';
-            this.loading = false;
-          }
         });
-      },
-      error: () => {
-        this.errorMessage = 'Registration failed. Email may already be in use.';
+      })
+    ).subscribe({
+      next: () => { this.router.navigate(['/dashboard']); },
+      error: (err) => {
+        if (err.status === 401 || err.status === 409) {
+          this.errorMessage = 'Registration failed. Email may already be in use.';
+        } else {
+          this.errorMessage = 'Account created but customer profile failed. Contact support.';
+        }
         this.loading = false;
       }
     });
