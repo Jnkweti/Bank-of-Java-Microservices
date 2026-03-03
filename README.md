@@ -2,7 +2,7 @@
 
 Microservices banking platform. 7 Spring Boot services talking over gRPC, Kafka for async event processing, JWT auth, Angular frontend. The whole thing spins up with `docker-compose up`.
 
-Built this to learn microservice patterns hands-on — saga transactions, event-driven architecture, gRPC service mesh, the works.
+Built this to learn microservice patterns hands-on, saga transactions, event-driven architecture, gRPC service mesh, the works.
 
 ## How it works
 
