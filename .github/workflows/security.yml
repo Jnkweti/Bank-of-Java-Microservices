@@ -290,9 +290,17 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
 
+      - name: Check SARIF file exists
+        id: sarif-check
+        if: always()
+        run: |
+          if [ -f "trivy-image-${{ matrix.service }}.sarif" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload image scan results
         uses: github/codeql-action/upload-sarif@v4
-        if: always() && hashFiles(format('trivy-image-{0}.sarif', matrix.service)) != ''
+        if: always() && steps.sarif-check.outputs.exists == 'true'
         with:
           sarif_file: trivy-image-${{ matrix.service }}.sarif
           category: trivy-image-${{ matrix.service }}
