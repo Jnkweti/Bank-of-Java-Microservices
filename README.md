@@ -144,7 +144,7 @@ GET /api/analytics/top-accounts?limit=10
 
 ## Frontend
 
-Angular 19 with Material. Template-driven forms, functional route guards, HTTP interceptor for JWT.
+Angular 21 with Material. Template-driven forms, functional route guards, HTTP interceptor for JWT.
 
 Pages: login, register (creates auth user + customer profile in one flow), dashboard (account cards with balances), create account, send payment.
 
@@ -181,6 +181,31 @@ cd auth-service && ./mvnw clean verify         # 19 tests
 
 All services use `@WebMvcTest` / `@ExtendWith(MockitoExtension.class)` — no Spring context or real DB needed, they run fast.
 
+## CI/CD — Security Pipeline
+
+Every push and PR runs a 7-layer security scanning pipeline via GitHub Actions. It's split across two workflows:
+
+**CodeQL SAST** (`codeql.yml`) — deep static analysis on Java and TypeScript using GitHub's `security-extended` query suite. Catches SQL injection, XSS, SSRF, insecure deserialization, hardcoded credentials, etc. Results show as inline PR annotations.
+
+**Security Scanning** (`security.yml`) — everything else:
+
+| Layer | Tool | What it catches |
+|---|---|---|
+| Secrets | Gitleaks | API keys, tokens, passwords in git history |
+| SAST | SpotBugs + FindSecBugs | Java-specific: SQL injection, XXE, weak crypto, command injection |
+| Dependencies | OWASP Dependency-Check | Known CVEs in Java dependencies (fails on CVSS ≥ 7) |
+| | npm audit | Known CVEs in frontend packages (fails on HIGH+) |
+| | OSV-Scanner | Google's cross-ecosystem vulnerability database |
+| Containers | Trivy (filesystem) | Vulnerabilities in config files, lockfiles, IaC |
+| | Trivy (images ×7) | OS + library CVEs in built Docker images |
+| IaC | Hadolint | Dockerfile anti-patterns (unpinned versions, root user) |
+| | Checkov | docker-compose + Dockerfile misconfigurations |
+| Licensing | license-checker | Copyleft licenses (GPL/AGPL) that would force open-sourcing |
+| Supply Chain | Syft | SBOM generation (CycloneDX format, retained 90 days) |
+| | OpenSSF Scorecard | Branch protection, signed commits, dependency pinning |
+
+All SARIF-producing scans upload results to GitHub's Security tab for unified triage. Docker image scanning only runs on pushes to main and scheduled runs (too expensive for every PR). A final **security gate** job aggregates all results — if anything fails, the pipeline blocks.
+
 ## Tech
 
 - Java 21, Spring Boot 3.5.7
@@ -188,7 +213,7 @@ All services use `@WebMvcTest` / `@ExtendWith(MockitoExtension.class)` — no Sp
 - Apache Kafka (KRaft mode)
 - PostgreSQL 16, MongoDB 7
 - Flyway for database migrations
-- Angular 19, Angular Material
+- Angular 21, Angular Material
 - Zipkin for distributed tracing
 - Docker multi-stage builds
 
